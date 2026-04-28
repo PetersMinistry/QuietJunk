@@ -31,10 +31,10 @@ All notable changes to QuietJunk should be recorded here.
 - Fixed the options page hydration race that could briefly show toggles off and timing inputs blank on install.
 - Built the release packaging flow around the native Windows zip APIs instead of an external archiver dependency.
 - Fixed the XPI packaging path bug so packaged assets use valid forward-slash archive paths and load correctly in Thunderbird.
+- Expanded live cleanup coverage to also watch messages moved into junk folders and messages updated to junk in place.
 
 ### Pending
 
 - Folder-level exclusions.
-- Event coverage for moved or updated messages.
 - Queue / processing manager.
 - Gmail spam compatibility investigation if Gmail remains inconsistent with other providers.

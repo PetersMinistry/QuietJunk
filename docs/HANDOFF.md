@@ -24,6 +24,8 @@ QuietJunk is currently intended to support:
 
 - Thunderbird accounts and folders that expose real junk-folder metadata
 - automatic mark-as-read on new junk mail
+- mark-as-read when messages are moved into junk after arrival
+- mark-as-read when Thunderbird updates a message to junk in place
 - startup cleanup after a configurable delay
 - manual cleanup from the options page
 - account-level exclusions
@@ -83,10 +85,12 @@ The extension now includes:
 
 ## How The Extension Currently Works
 
-### New Mail Flow
+### Live Mail Flow
 
 - `messages.onNewMailReceived` is registered from `src/background.js`
-- new mail events are passed to `handleNewMailEvent`
+- `messages.onMoved` is registered to catch messages that land in junk after later filters move them
+- `messages.onUpdated` is registered conservatively to catch in-place junk updates
+- live events are passed through the spam handler
 - only folders exposed by Thunderbird as junk folders are processed
 - unread messages are marked as read
 - recently processed message IDs are cached temporarily to reduce duplicate handling during event bursts
@@ -140,6 +144,7 @@ Current packaging notes:
 ### Implemented
 
 - Phase 1 core listener and read-marking behavior
+- expanded live-event coverage for moved and updated junk messages
 - startup cleanup with alarms-based scheduling
 - manual cleanup
 - live cleanup diagnostics
@@ -157,8 +162,6 @@ Current packaging notes:
 - folder-level exclusions
 - dedicated queue or processing manager
 - `queue.js`
-- `messages.onMoved` handling
-- `messages.onUpdated` handling
 - auto-delete after X days
 - auto-move to trash
 - domain-based filtering
@@ -174,10 +177,9 @@ Current packaging notes:
 Highest-value next steps:
 
 1. Add folder-level exclusions.
-2. Add `messages.onMoved` support for messages that are classified or moved after receipt.
-3. Introduce a proper queue / processing manager for burst handling.
-4. Improve cleanup summary readability for multi-account runs by showing account + folder labels more clearly.
-5. Investigate Gmail only if a safe metadata-based path becomes clear.
+2. Introduce a proper queue / processing manager for burst handling.
+3. Improve cleanup summary readability for multi-account runs by showing account + folder labels more clearly.
+4. Investigate Gmail only if a safe metadata-based path becomes clear.
 
 ## Validation Status
 
@@ -197,8 +199,6 @@ Not yet confirmed in this workspace:
 
 - full Gmail spam behavior
 - folder exclusion behavior because folder exclusions are not built yet
-- moved-message handling via `messages.onMoved`
-- updated-message handling via `messages.onUpdated`
 - queue behavior under heavy burst conditions
 
 ## Notes For Future Conversations

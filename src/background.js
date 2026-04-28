@@ -1,6 +1,11 @@
 import { logInfo } from "./logger.js";
 import { ensureSettings, getSettings } from "./settings.js";
-import { handleNewMailEvent, processExistingUnreadJunk } from "./spamHandler.js";
+import {
+  handleMovedMessages,
+  handleNewMailEvent,
+  handleUpdatedMessage,
+  processExistingUnreadJunk
+} from "./spamHandler.js";
 
 const startupScanAlarmName = "quietjunk-startup-scan";
 
@@ -27,8 +32,10 @@ const settings = await ensureSettings();
 logInfo("Background script loaded.");
 
 messenger.messages.onNewMailReceived.addListener(handleNewMailEvent, true);
+messenger.messages.onMoved.addListener(handleMovedMessages);
+messenger.messages.onUpdated.addListener(handleUpdatedMessage);
 
-logInfo("Listening for new mail across all folders.");
+logInfo("Listening for new mail, moved messages, and junk updates.");
 
 messenger.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name !== startupScanAlarmName) {

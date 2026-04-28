@@ -51,6 +51,13 @@ async function* iterateMessageList(page) {
   }
 }
 
+function createMessageList(messages) {
+  return {
+    messages,
+    id: null
+  };
+}
+
 function isJunkFolder(folder) {
   return folder?.type === "junk" || folder?.specialUse?.includes("junk");
 }
@@ -192,6 +199,52 @@ async function markUnreadMessagesAsRead(folder, messageList, sourceLabel) {
 
 export async function handleNewMailEvent(folder, messageList) {
   return markUnreadMessagesAsRead(folder, messageList, "new-mail");
+}
+
+export async function handleMovedMessages(_originalMessages, movedMessages) {
+  const messagesByFolder = new Map();
+
+  for await (const message of iterateMessageList(movedMessages)) {
+    const folder = message?.folder;
+    if (!folder?.id) {
+      continue;
+    }
+
+    const existingEntry = messagesByFolder.get(folder.id);
+    if (existingEntry) {
+      existingEntry.messages.push(message);
+      continue;
+    }
+
+    messagesByFolder.set(folder.id, {
+      folder,
+      messages: [message]
+    });
+  }
+
+  let totalUpdated = 0;
+
+  for (const { folder, messages } of messagesByFolder.values()) {
+    totalUpdated += await markUnreadMessagesAsRead(
+      folder,
+      createMessageList(messages),
+      "moved-to-junk"
+    );
+  }
+
+  return totalUpdated;
+}
+
+export async function handleUpdatedMessage(message, changedProperties) {
+  if (!changedProperties?.junk || !message?.folder) {
+    return 0;
+  }
+
+  return markUnreadMessagesAsRead(
+    message.folder,
+    createMessageList([message]),
+    "junk-updated"
+  );
 }
 
 export async function processExistingUnreadJunk(options = {}) {
