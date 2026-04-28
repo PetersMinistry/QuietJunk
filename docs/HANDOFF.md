@@ -27,6 +27,7 @@ QuietJunk is currently intended to support:
 - mark-as-read when messages are moved into junk after arrival
 - mark-as-read when Thunderbird updates a message to junk in place
 - startup cleanup after a configurable delay
+- a quiet recurring maintenance scan that catches missed unread junk cases
 - manual cleanup from the options page
 - account-level exclusions
 
@@ -104,6 +105,13 @@ The extension now includes:
 - startup scans trust the junk folder location and query unread messages in that folder, instead of relying on the per-message `junk` flag
 - unread junk messages found during startup are marked as read
 
+### Maintenance Scan Flow
+
+- a recurring background alarm runs while the extension is enabled
+- it performs a quiet unread-junk sweep once per minute
+- it is meant to catch missed live-event cases, such as a message being manually flipped back to unread inside a junk folder
+- it does not write to the visible cleanup summary/history feed on every pass
+
 ### Manual Cleanup Flow
 
 - the options UI can request an immediate cleanup run
@@ -148,6 +156,7 @@ Current packaging notes:
 - startup cleanup with alarms-based scheduling
 - manual cleanup
 - live cleanup diagnostics
+- quiet maintenance scan fallback
 - Phase 2 minimal options UI
 - Phase 2 enable/disable
 - Phase 2 account-level exclusions

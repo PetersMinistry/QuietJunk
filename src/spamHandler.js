@@ -248,7 +248,11 @@ export async function handleUpdatedMessage(message, changedProperties) {
 }
 
 export async function processExistingUnreadJunk(options = {}) {
-  const { ignoreStartupSetting = false, sourceLabel = "startup-scan" } = options;
+  const {
+    ignoreStartupSetting = false,
+    sourceLabel = "startup-scan",
+    writeSummary = true
+  } = options;
   const settings = await getSettings();
 
   if (!settings.enabled || (!ignoreStartupSetting && !settings.markExistingOnStartup)) {
@@ -259,7 +263,9 @@ export async function processExistingUnreadJunk(options = {}) {
       matchedFolderNames: [],
       reason: settings.enabled ? "startup-disabled" : "extension-disabled"
     });
-    await setLastCleanupSummary(summary);
+    if (writeSummary) {
+      await setLastCleanupSummary(summary);
+    }
     return summary;
   }
 
@@ -302,6 +308,8 @@ export async function processExistingUnreadJunk(options = {}) {
     reason: junkFolders.length > 0 ? "completed" : "no-matching-folders"
   });
 
-  await setLastCleanupSummary(summary);
+  if (writeSummary) {
+    await setLastCleanupSummary(summary);
+  }
   return summary;
 }

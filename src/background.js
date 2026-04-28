@@ -8,6 +8,8 @@ import {
 } from "./spamHandler.js";
 
 const startupScanAlarmName = "quietjunk-startup-scan";
+const maintenanceScanAlarmName = "quietjunk-maintenance-scan";
+const maintenanceScanPeriodMinutes = 1;
 
 async function scheduleStartupScan(settings, reason) {
   if (!settings.enabled || !settings.markExistingOnStartup) {
@@ -27,6 +29,24 @@ async function scheduleStartupScan(settings, reason) {
   return true;
 }
 
+async function scheduleMaintenanceScan(settings, reason) {
+  if (!settings.enabled) {
+    await messenger.alarms.clear(maintenanceScanAlarmName);
+    return false;
+  }
+
+  logInfo(
+    `Scheduling maintenance junk scan every ${maintenanceScanPeriodMinutes} minute(s) (${reason}).`
+  );
+
+  await messenger.alarms.create(maintenanceScanAlarmName, {
+    delayInMinutes: maintenanceScanPeriodMinutes,
+    periodInMinutes: maintenanceScanPeriodMinutes
+  });
+
+  return true;
+}
+
 const settings = await ensureSettings();
 
 logInfo("Background script loaded.");
@@ -38,25 +58,37 @@ messenger.messages.onUpdated.addListener(handleUpdatedMessage);
 logInfo("Listening for new mail, moved messages, and junk updates.");
 
 messenger.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name !== startupScanAlarmName) {
+  if (alarm.name === startupScanAlarmName) {
+    processExistingUnreadJunk().catch((error) => {
+      console.error("[QuietJunk] Startup junk scan failed.", error);
+    });
     return;
   }
 
-  processExistingUnreadJunk().catch((error) => {
-    console.error("[QuietJunk] Startup junk scan failed.", error);
-  });
+  if (alarm.name === maintenanceScanAlarmName) {
+    processExistingUnreadJunk({
+      ignoreStartupSetting: true,
+      sourceLabel: "maintenance-scan",
+      writeSummary: false
+    }).catch((error) => {
+      console.error("[QuietJunk] Maintenance junk scan failed.", error);
+    });
+  }
 });
 
 await scheduleStartupScan(settings, "background-load");
+await scheduleMaintenanceScan(settings, "background-load");
 
 messenger.runtime.onStartup.addListener(async () => {
   const nextSettings = await getSettings();
   await scheduleStartupScan(nextSettings, "runtime.onStartup");
+  await scheduleMaintenanceScan(nextSettings, "runtime.onStartup");
 });
 
 messenger.runtime.onInstalled.addListener(async () => {
   const nextSettings = await getSettings();
   await scheduleStartupScan(nextSettings, "runtime.onInstalled");
+  await scheduleMaintenanceScan(nextSettings, "runtime.onInstalled");
 });
 
 messenger.storage.onChanged.addListener(async (changes, areaName) => {
@@ -74,6 +106,7 @@ messenger.storage.onChanged.addListener(async (changes, areaName) => {
 
   const nextSettings = await getSettings();
   await scheduleStartupScan(nextSettings, "settings-change");
+  await scheduleMaintenanceScan(nextSettings, "settings-change");
 });
 
 messenger.runtime.onMessage.addListener((message) => {

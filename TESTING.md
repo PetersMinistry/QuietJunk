@@ -59,6 +59,15 @@ Confirm:
 - the cleanup counter increments
 - the console shows expected log output if debug is enabled
 
+### 3b. Re-Unread Junk Recovery
+
+Take a message that is already sitting in a supported junk folder and manually mark it unread again.
+
+Confirm:
+
+- QuietJunk flips it back to read automatically
+- if a live event is missed, the maintenance pass corrects it within about a minute
+
 ### 4. Startup Scan
 
 Prepare at least one unread junk message, then restart Thunderbird.

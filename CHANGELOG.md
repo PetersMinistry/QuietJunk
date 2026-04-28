@@ -43,6 +43,7 @@ Current shipped build:
 - Built the release packaging flow around the native Windows zip APIs instead of an external archiver dependency.
 - Fixed the XPI packaging path bug so packaged assets use valid forward-slash archive paths and load correctly in Thunderbird.
 - Expanded live cleanup coverage to also watch messages moved into junk folders and messages updated to junk in place.
+- Added a quiet recurring maintenance scan so unread junk gets corrected even when Thunderbird misses a live event path.
 
 ### Pending
 
