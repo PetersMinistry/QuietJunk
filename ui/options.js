@@ -3,6 +3,7 @@ import {
   resetCleanupCount,
   updateSettings
 } from "../src/settings.js";
+import { processExistingUnreadJunk } from "../src/spamHandler.js";
 
 const form = document.getElementById("settings-form");
 const enabledInput = document.getElementById("enabled");
@@ -194,9 +195,22 @@ runCleanupNowButton.addEventListener("click", async () => {
   status.textContent = "Running cleanup...";
 
   try {
-    const summary = await messenger.runtime.sendMessage({
-      type: "quietjunk:run-cleanup-now"
-    });
+    let summary;
+
+    try {
+      summary = await messenger.runtime.sendMessage({
+        type: "quietjunk:run-cleanup-now"
+      });
+    } catch (error) {
+      if (!String(error?.message || error).includes("Could not establish connection")) {
+        throw error;
+      }
+
+      summary = await processExistingUnreadJunk({
+        ignoreStartupSetting: true,
+        sourceLabel: "manual-scan"
+      });
+    }
 
     const nextSettings = await getSettings();
     cleanupCounter.textContent = String(nextSettings.totalMarkedRead || 0);
