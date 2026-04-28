@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QuietJunk Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="panel">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">QuietJunk</p>
+          <h1>Silent spam cleanup</h1>
+          <p class="copy">
+            Keep junk mail from adding fake unread noise across Thunderbird.
+          </p>
+        </div>
+        <div class="hero-badge">
+          <span class="hero-badge-label">Messages cleared</span>
+          <strong id="cleanup-counter" class="hero-badge-value">0</strong>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="QuietJunk sections">
+        <button
+          id="tab-settings"
+          class="tab is-active"
+          type="button"
+          data-panel="settings-panel"
+          aria-controls="settings-panel"
+          aria-selected="true"
+        >
+          Settings
+        </button>
+        <button
+          id="tab-about"
+          class="tab"
+          type="button"
+          data-panel="about-panel"
+          aria-controls="about-panel"
+          aria-selected="false"
+        >
+          About
+        </button>
+      </nav>
+
+      <section id="settings-panel" class="tab-panel is-active" aria-labelledby="tab-settings">
+        <form id="settings-form" class="settings">
+          <label class="setting">
+            <span>
+              <strong>Enable QuietJunk</strong>
+              <small>Marks new junk messages as read automatically.</small>
+            </span>
+            <input id="enabled" name="enabled" type="checkbox" />
+          </label>
+
+          <label class="setting">
+            <span>
+              <strong>Debug logging</strong>
+              <small>Writes extra diagnostic details to the extension console.</small>
+            </span>
+            <input id="debug" name="debug" type="checkbox" />
+          </label>
+
+          <label class="setting">
+            <span>
+              <strong>Mark existing junk on startup</strong>
+              <small>Scans junk folders when the extension starts and clears unread counts.</small>
+            </span>
+            <input id="markExistingOnStartup" name="markExistingOnStartup" type="checkbox" />
+          </label>
+
+          <label class="setting">
+            <span>
+              <strong>Startup debounce</strong>
+              <small>Wait this many milliseconds before the startup junk scan begins.</small>
+            </span>
+            <input
+              id="startupDebounceMs"
+              name="startupDebounceMs"
+              type="number"
+              min="0"
+              step="500"
+            />
+          </label>
+
+          <section class="setting stack">
+            <span>
+              <strong>Excluded accounts</strong>
+              <small>Skip junk cleanup for any account you leave unchecked here.</small>
+            </span>
+            <div id="accounts-list" class="account-list"></div>
+          </section>
+
+          <div class="actions">
+            <button type="submit">Save settings</button>
+            <p id="status" class="status" aria-live="polite"></p>
+          </div>
+        </form>
+      </section>
+
+      <section
+        id="about-panel"
+        class="tab-panel"
+        aria-labelledby="tab-about"
+        hidden
+      >
+        <div class="about-grid">
+          <section class="about-card">
+            <p class="eyebrow">About</p>
+            <h2>No noise. No clutter.</h2>
+            <p class="copy">
+              QuietJunk is built to quietly remove false unread pressure by clearing junk mail
+              counts behind the scenes. It stays passive by default and gives just enough control
+              for people with multiple accounts or unusual folder behavior.
+            </p>
+          </section>
+
+          <section class="about-card metrics">
+            <div>
+              <span class="metric-label">Version</span>
+              <strong id="about-version" class="metric-value">0.1.0</strong>
+            </div>
+            <div>
+              <span class="metric-label">Manifest</span>
+              <strong id="about-manifest" class="metric-value">MV3</strong>
+            </div>
+            <div>
+              <span class="metric-label">Mode</span>
+              <strong class="metric-value">Passive cleanup</strong>
+            </div>
+          </section>
+
+          <section class="about-card">
+            <p class="eyebrow">Current Capabilities</p>
+            <ul class="feature-list">
+              <li>Watches new mail events after Thunderbird spam classification.</li>
+              <li>Clears unread status in junk folders across accounts.</li>
+              <li>Supports startup cleanup with configurable delay.</li>
+              <li>Lets you exclude specific accounts from automation.</li>
+            </ul>
+          </section>
+
+          <section class="about-card">
+            <p class="eyebrow">Testing Notes</p>
+            <ul class="feature-list">
+              <li>Load this add-on temporarily from `manifest.json`.</li>
+              <li>Use Debug logging when validating real-world junk behavior.</li>
+              <li>Check the counter after startup scans and fresh junk deliveries.</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
