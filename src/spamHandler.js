@@ -28,6 +28,56 @@ function getFolderLabel(folder) {
   return folder?.path || folder?.name || folder?.id || "unknown folder";
 }
 
+function collectJunkFolders(folder, junkFolders = []) {
+  if (!folder) {
+    return junkFolders;
+  }
+
+  if (isJunkFolder(folder)) {
+    junkFolders.push(folder);
+  }
+
+  if (Array.isArray(folder.subFolders)) {
+    for (const subFolder of folder.subFolders) {
+      collectJunkFolders(subFolder, junkFolders);
+    }
+  }
+
+  return junkFolders;
+}
+
+async function findJunkFolders(settings) {
+  const accounts = await messenger.accounts.list(true);
+  const discoveredFolders = [];
+
+  for (const account of accounts) {
+    if (!account?.id || settings.excludedAccountIds.includes(account.id)) {
+      continue;
+    }
+
+    collectJunkFolders(account.rootFolder, discoveredFolders);
+  }
+
+  if (discoveredFolders.length > 0) {
+    return discoveredFolders.filter(
+      (folder) => folder?.accountId && !folder.isUnified && !folder.isVirtual && !folder.isTag
+    );
+  }
+
+  const queriedFolders = await messenger.folders.query({
+    specialUse: ["junk"]
+  });
+
+  return queriedFolders.filter(
+    (folder) =>
+      folder?.accountId &&
+      !folder.isUnified &&
+      !folder.isVirtual &&
+      !folder.isTag &&
+      !settings.excludedAccountIds.includes(folder.accountId)
+  );
+}
+
 async function markUnreadMessagesAsRead(folder, messageList, sourceLabel) {
   const settings = await getSettings();
 
@@ -89,26 +139,13 @@ export async function processExistingUnreadJunk() {
     return 0;
   }
 
-  const junkFolders = await messenger.folders.query({
-    specialUse: ["junk"]
-  });
+  const junkFolders = await findJunkFolders(settings);
 
   let totalUpdated = 0;
 
   await logDebug(`Startup scan found ${junkFolders.length} junk folder(s).`);
 
   for (const folder of junkFolders) {
-    if (!folder.accountId || folder.isUnified || folder.isVirtual || folder.isTag) {
-      continue;
-    }
-
-    if (isExcludedAccount(folder, settings)) {
-      await logDebug(
-        `Skipping startup scan for excluded account ${folder.accountId} in ${getFolderLabel(folder)}.`
-      );
-      continue;
-    }
-
     const unreadJunkMessages = await messenger.messages.query({
       folderId: folder.id,
       includeSubFolders: false,

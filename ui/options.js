@@ -46,8 +46,12 @@ function createAccountRow(account, settings) {
   checkbox.checked = !settings.excludedAccountIds.includes(account.id);
   checkbox.dataset.accountId = account.id;
 
+  const toggle = document.createElement("span");
+  toggle.className = "account-toggle";
+  toggle.setAttribute("aria-hidden", "true");
+
   meta.append(title, subtitle);
-  wrapper.append(meta, checkbox);
+  wrapper.append(meta, checkbox, toggle);
 
   return wrapper;
 }
