@@ -56,6 +56,24 @@ body {
     linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(244, 247, 250, 0.92));
 }
 
+.hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hero-logo {
+  width: 80px;
+  height: 80px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 18px rgba(32, 52, 76, 0.14));
+}
+
+.hero-title-wrap {
+  min-width: 0;
+}
+
 .eyebrow {
   margin: 0 0 6px;
   font-size: 10px;
@@ -68,9 +86,17 @@ body {
 h1 {
   margin: 0;
   font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
-  font-size: 31px;
+  font-size: 40px;
   line-height: 1.02;
   letter-spacing: -0.02em;
+}
+
+.hero-subtitle {
+  margin: 6px 0 0;
+  color: var(--accent);
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-size: 20px;
+  line-height: 1.15;
 }
 
 .copy {
@@ -415,6 +441,11 @@ input[type="number"] {
   line-height: 1.05;
 }
 
+.about-subtitle {
+  margin-top: 8px;
+  font-size: 16px;
+}
+
 .metrics {
   display: grid;
   gap: 16px;
@@ -499,8 +530,17 @@ button:hover {
     grid-template-columns: 1fr;
   }
 
+  .hero-brand {
+    align-items: flex-start;
+  }
+
+  .hero-logo {
+    width: 68px;
+    height: 68px;
+  }
+
   h1 {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .tabs,

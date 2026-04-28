@@ -11,9 +11,10 @@
     }
   },
   "icons": {
-    "16": "icons/quietjunk-16.svg",
-    "32": "icons/quietjunk-32.svg",
-    "64": "icons/quietjunk-64.svg"
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "64": "icons/icon-64.png",
+    "96": "icons/icon-96.png"
   },
   "permissions": [
     "accountsRead",
