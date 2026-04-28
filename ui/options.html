@@ -19,24 +19,24 @@
               height="96"
             />
             <div class="hero-title-wrap">
-              <p class="eyebrow">Thunderbird extension</p>
+              <p class="eyebrow">Thunderbird add-on</p>
               <h1>QuietJunk</h1>
-              <p class="hero-subtitle">Silent spam cleanup</p>
+              <p class="hero-subtitle">Quiet help for messy inboxes</p>
             </div>
           </div>
           <p class="copy">
-            Keep junk mail from adding fake unread noise across Thunderbird.
+            Keeps spam from messing with your unread count so your inbox feels a little less chaotic.
           </p>
           <div class="hero-strip">
-            <span class="hero-chip">Passive by default</span>
+            <span class="hero-chip">Works quietly</span>
             <span class="hero-chip">Junk folders only</span>
-            <span class="hero-chip">Cross-account aware</span>
+            <span class="hero-chip">Handles all your accounts</span>
           </div>
         </div>
         <div class="hero-badge" aria-label="Messages cleared">
-          <span class="hero-badge-label">Messages cleared</span>
+          <span class="hero-badge-label">Quiet count</span>
           <strong id="cleanup-counter" class="hero-badge-value">0</strong>
-          <span class="hero-badge-foot">Running total across this profile</span>
+          <span class="hero-badge-foot">Spam messages cleaned up on this profile so far</span>
         </div>
       </header>
 
@@ -74,7 +74,7 @@
             <label class="setting">
               <span class="setting-copy">
                 <strong>Enable QuietJunk</strong>
-                <small>Marks new junk messages as read automatically.</small>
+                <small>Marks fresh junk as read so it stops pretending to matter.</small>
               </span>
               <span class="toggle">
                 <input id="enabled" name="enabled" type="checkbox" />
@@ -84,19 +84,8 @@
 
             <label class="setting">
               <span class="setting-copy">
-                <strong>Debug logging</strong>
-                <small>Writes extra diagnostic details to the extension console.</small>
-              </span>
-              <span class="toggle">
-                <input id="debug" name="debug" type="checkbox" />
-                <span class="toggle-ui" aria-hidden="true"></span>
-              </span>
-            </label>
-
-            <label class="setting">
-              <span class="setting-copy">
                 <strong>Mark existing junk on startup</strong>
-                <small>Scans junk folders when the extension starts and clears unread counts.</small>
+                <small>Does a quick cleanup when Thunderbird opens.</small>
               </span>
               <span class="toggle">
                 <input id="markExistingOnStartup" name="markExistingOnStartup" type="checkbox" />
@@ -107,7 +96,7 @@
             <label class="setting setting-number">
               <span class="setting-copy">
                 <strong>Startup debounce</strong>
-                <small>Wait this many milliseconds before the startup junk scan begins.</small>
+                <small>How long to wait before the startup cleanup begins.</small>
               </span>
               <div class="number-wrap">
                 <input
@@ -124,7 +113,7 @@
             <label class="setting setting-number">
               <span class="setting-copy">
                 <strong>Duplicate guard window</strong>
-                <small>Prevents the same junk message from being processed repeatedly during sync bursts.</small>
+                <small>Keeps the same junk message from getting processed again and again during noisy sync bursts.</small>
               </span>
               <div class="number-wrap">
                 <input
@@ -143,9 +132,40 @@
             <div class="section-head">
               <p class="eyebrow">Coverage</p>
               <h2>Account scope</h2>
-              <p class="section-copy">Turn off any account that should keep its own junk behavior.</p>
+              <p class="section-copy">Turn off any account that should be left alone. Kept compact so the whole list stays easy to scan.</p>
             </div>
             <div id="accounts-list" class="account-list"></div>
+          </section>
+
+          <section class="settings-section">
+            <div class="section-head">
+              <p class="eyebrow">Diagnostics</p>
+              <h2>Cleanup tools</h2>
+              <p class="section-copy">Run a cleanup whenever you want and see how it went.</p>
+            </div>
+            <label class="setting setting-inline">
+              <span class="setting-copy">
+                <strong>Debug logging</strong>
+                <small>Turn this on when you want the extra behind-the-scenes details in the extension console.</small>
+              </span>
+              <span class="toggle">
+                <input id="debug" name="debug" type="checkbox" />
+                <span class="toggle-ui" aria-hidden="true"></span>
+              </span>
+            </label>
+            <div class="actions tool-actions">
+              <button id="run-cleanup-now" type="button">Run cleanup now</button>
+            </div>
+            <div class="summary-card">
+              <p class="summary-label">Last cleanup</p>
+              <p id="last-cleanup-summary" class="summary-copy">No cleanup summary yet.</p>
+              <div class="summary-history-wrap">
+                <p class="summary-history-label">Recent runs</p>
+                <div id="cleanup-history" class="summary-history">
+                  <p class="summary-history-empty">No cleanup history yet.</p>
+                </div>
+              </div>
+            </div>
           </section>
 
           <div class="actions">
@@ -165,11 +185,10 @@
           <section class="about-card">
             <p class="eyebrow">About</p>
             <h2>QuietJunk</h2>
-            <p class="hero-subtitle about-subtitle">No noise. No clutter.</p>
+            <p class="hero-subtitle about-subtitle">Less noise. More calm.</p>
             <p class="copy">
-              QuietJunk is built to quietly remove false unread pressure by clearing junk mail
-              counts behind the scenes. It stays passive by default and gives just enough control
-              for people with multiple accounts or unusual folder behavior.
+              QuietJunk keeps unread spam from piling up in the background. It stays out of your way,
+              cleans up the junk, and gives you a few helpful controls when you want them.
             </p>
           </section>
 
@@ -184,21 +203,21 @@
             </div>
             <div>
               <span class="metric-label">Mode</span>
-              <strong class="metric-value">Passive cleanup</strong>
+              <strong class="metric-value">Set it and forget it</strong>
             </div>
             <div>
               <span class="metric-label">Counter</span>
-              <button id="reset-counter" class="secondary-button" type="button">Reset cleared count</button>
+              <button id="reset-counter" class="secondary-button" type="button">Reset the count</button>
             </div>
           </section>
 
           <section class="about-card">
             <p class="eyebrow">Current Capabilities</p>
             <ul class="feature-list">
-              <li>Watches new mail events after Thunderbird spam classification.</li>
-              <li>Clears unread status in junk folders across accounts.</li>
-              <li>Supports startup cleanup with configurable delay.</li>
-              <li>Lets you exclude specific accounts from automation.</li>
+              <li>Watches new mail after Thunderbird sorts out the spam.</li>
+              <li>Clears unread junk across your accounts.</li>
+              <li>Can do a startup cleanup after a delay you control.</li>
+              <li>Lets you leave specific accounts alone.</li>
             </ul>
           </section>
 
@@ -206,8 +225,8 @@
             <p class="eyebrow">Testing Notes</p>
             <ul class="feature-list">
               <li>Load this add-on temporarily from `manifest.json`.</li>
-              <li>Use Debug logging when validating real-world junk behavior.</li>
-              <li>Check the counter after startup scans and fresh junk deliveries.</li>
+              <li>Turn on Debug logging if you want the play-by-play.</li>
+              <li>Check the counter after startup cleanup or fresh junk mail.</li>
             </ul>
           </section>
         </div>

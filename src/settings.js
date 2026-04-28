@@ -5,8 +5,12 @@ export const defaultSettings = {
   markExistingOnStartup: true,
   startupDebounceMs: 4000,
   processedMessageTtlMs: 300000,
-  totalMarkedRead: 0
+  totalMarkedRead: 0,
+  lastCleanupSummary: null,
+  cleanupHistory: []
 };
+
+const maxCleanupHistoryEntries = 8;
 
 export async function getSettings() {
   return messenger.storage.local.get(defaultSettings);
@@ -45,5 +49,15 @@ export async function incrementCleanupCount(amount) {
 
 export async function resetCleanupCount() {
   await messenger.storage.local.set({ totalMarkedRead: 0 });
+  return getSettings();
+}
+
+export async function setLastCleanupSummary(lastCleanupSummary) {
+  const current = await getSettings();
+  const cleanupHistory = [lastCleanupSummary, ...(current.cleanupHistory || [])]
+    .filter(Boolean)
+    .slice(0, maxCleanupHistoryEntries);
+
+  await messenger.storage.local.set({ lastCleanupSummary, cleanupHistory });
   return getSettings();
 }

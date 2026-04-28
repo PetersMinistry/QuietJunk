@@ -12,6 +12,7 @@ QuietJunk is between the original MVP and early stability/configuration work.
 - test startup cleanup after restart
 - test multiple accounts
 - test excluded-account behavior
+- investigate Gmail spam-folder behavior separately if Gmail remains inconsistent
 
 ### 2. Control Improvements
 

@@ -2,26 +2,24 @@ import { logInfo } from "./logger.js";
 import { ensureSettings, getSettings } from "./settings.js";
 import { handleNewMailEvent, processExistingUnreadJunk } from "./spamHandler.js";
 
-let startupScanTimeoutId = null;
+const startupScanAlarmName = "quietjunk-startup-scan";
 
-function scheduleStartupScan(settings) {
-  if (startupScanTimeoutId) {
-    globalThis.clearTimeout(startupScanTimeoutId);
-    startupScanTimeoutId = null;
-  }
-
+async function scheduleStartupScan(settings, reason) {
   if (!settings.enabled || !settings.markExistingOnStartup) {
-    return;
+    await messenger.alarms.clear(startupScanAlarmName);
+    return false;
   }
 
   const startupDebounceMs = Math.max(0, Number(settings.startupDebounceMs) || 0);
-  logInfo(`Scheduling startup junk scan in ${startupDebounceMs} ms.`);
+  logInfo(
+    `Scheduling startup junk scan in ${startupDebounceMs} ms (${reason}).`
+  );
 
-  startupScanTimeoutId = globalThis.setTimeout(() => {
-    processExistingUnreadJunk().catch((error) => {
-      console.error("[QuietJunk] Startup junk scan failed.", error);
-    });
-  }, startupDebounceMs);
+  await messenger.alarms.create(startupScanAlarmName, {
+    when: Date.now() + startupDebounceMs
+  });
+
+  return true;
 }
 
 const settings = await ensureSettings();
@@ -32,7 +30,27 @@ messenger.messages.onNewMailReceived.addListener(handleNewMailEvent, true);
 
 logInfo("Listening for new mail across all folders.");
 
-scheduleStartupScan(settings);
+messenger.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name !== startupScanAlarmName) {
+    return;
+  }
+
+  processExistingUnreadJunk().catch((error) => {
+    console.error("[QuietJunk] Startup junk scan failed.", error);
+  });
+});
+
+await scheduleStartupScan(settings, "background-load");
+
+messenger.runtime.onStartup.addListener(async () => {
+  const nextSettings = await getSettings();
+  await scheduleStartupScan(nextSettings, "runtime.onStartup");
+});
+
+messenger.runtime.onInstalled.addListener(async () => {
+  const nextSettings = await getSettings();
+  await scheduleStartupScan(nextSettings, "runtime.onInstalled");
+});
 
 messenger.storage.onChanged.addListener(async (changes, areaName) => {
   if (areaName !== "local") {
@@ -48,5 +66,16 @@ messenger.storage.onChanged.addListener(async (changes, areaName) => {
   }
 
   const nextSettings = await getSettings();
-  scheduleStartupScan(nextSettings);
+  await scheduleStartupScan(nextSettings, "settings-change");
+});
+
+messenger.runtime.onMessage.addListener((message) => {
+  if (message?.type !== "quietjunk:run-cleanup-now") {
+    return false;
+  }
+
+  return processExistingUnreadJunk({
+    ignoreStartupSetting: true,
+    sourceLabel: "manual-scan"
+  });
 });

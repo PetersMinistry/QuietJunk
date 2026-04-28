@@ -57,9 +57,17 @@ The extension is beyond the original zero-UI MVP and now includes:
 ### Startup Scan Flow
 
 - startup scan scheduling is handled in `src/background.js`
-- if enabled, QuietJunk waits for `startupDebounceMs`
-- then `processExistingUnreadJunk()` scans discovered junk folders
+- if enabled, QuietJunk schedules an alarm using the Thunderbird alarms API
+- startup scheduling is triggered on background load, startup, install, and relevant settings changes
+- after the configured `startupDebounceMs`, `processExistingUnreadJunk()` scans discovered junk folders
+- startup scans now trust the junk folder location and query unread messages in that folder, instead of relying on the per-message `junk` flag
 - unread junk messages found during startup are marked as read
+
+### Manual Cleanup Flow
+
+- the options UI can request an immediate cleanup run
+- manual cleanup uses the same scan logic as startup cleanup
+- manual cleanup is allowed even if the startup-only toggle is disabled
 
 ### Settings Storage
 
@@ -112,6 +120,7 @@ Highest-value next steps:
 3. Introduce a proper queue / processing manager for burst handling.
 4. Improve branding hierarchy in the options header so `QuietJunk` leads more clearly than the descriptive tagline.
 5. Integrate the final logo once provided.
+6. Investigate Gmail spam behavior if Gmail junk remains inconsistent while other accounts are working.
 
 ## Validation Status
 
@@ -128,6 +137,7 @@ Not yet confirmed in this workspace:
 - startup scan behavior across actual restarts
 - account exclusion behavior in live Thunderbird profiles
 - multi-account and high-volume IMAP scenarios
+- Gmail spam-folder behavior may still differ from other providers and should be treated as an open compatibility check
 
 ## Notes For Future Conversations
 

@@ -1,5 +1,9 @@
 import { logDebug, logError, logInfo } from "./logger.js";
-import { getSettings, incrementCleanupCount } from "./settings.js";
+import {
+  getSettings,
+  incrementCleanupCount,
+  setLastCleanupSummary
+} from "./settings.js";
 
 const recentlyProcessedMessages = new Map();
 
@@ -111,6 +115,23 @@ async function findJunkFolders(settings) {
   );
 }
 
+function createCleanupSummary({
+  sourceLabel,
+  totalUpdated,
+  scannedFolderCount,
+  matchedFolderNames,
+  reason
+}) {
+  return {
+    sourceLabel,
+    totalUpdated,
+    scannedFolderCount,
+    matchedFolderNames,
+    reason,
+    ranAt: new Date().toISOString()
+  };
+}
+
 async function markUnreadMessagesAsRead(folder, messageList, sourceLabel) {
   const settings = await getSettings();
 
@@ -173,16 +194,28 @@ export async function handleNewMailEvent(folder, messageList) {
   return markUnreadMessagesAsRead(folder, messageList, "new-mail");
 }
 
-export async function processExistingUnreadJunk() {
+export async function processExistingUnreadJunk(options = {}) {
+  const { ignoreStartupSetting = false, sourceLabel = "startup-scan" } = options;
   const settings = await getSettings();
 
-  if (!settings.enabled || !settings.markExistingOnStartup) {
-    return 0;
+  if (!settings.enabled || (!ignoreStartupSetting && !settings.markExistingOnStartup)) {
+    const summary = createCleanupSummary({
+      sourceLabel,
+      totalUpdated: 0,
+      scannedFolderCount: 0,
+      matchedFolderNames: [],
+      reason: settings.enabled ? "startup-disabled" : "extension-disabled"
+    });
+    await setLastCleanupSummary(summary);
+    return summary;
   }
 
   const junkFolders = await findJunkFolders(settings);
 
   let totalUpdated = 0;
+  const matchedFolderNames = junkFolders.map(
+    (folder) => folder?.name || folder?.path || String(folder?.id || "unknown")
+  );
 
   await logDebug(`Startup scan found ${junkFolders.length} junk folder(s).`);
 
@@ -190,7 +223,6 @@ export async function processExistingUnreadJunk() {
     const unreadJunkMessages = await messenger.messages.query({
       folderId: folder.id,
       includeSubFolders: false,
-      junk: true,
       read: false,
       messagesPerPage: 100,
       autoPaginationTimeout: 0
@@ -199,15 +231,24 @@ export async function processExistingUnreadJunk() {
     totalUpdated += await markUnreadMessagesAsRead(
       folder,
       unreadJunkMessages,
-      "startup-scan"
+      sourceLabel
     );
   }
 
   if (totalUpdated > 0) {
-    logInfo(`Startup scan cleared ${totalUpdated} unread junk message(s).`);
+    logInfo(`${sourceLabel} cleared ${totalUpdated} unread junk message(s).`);
   } else {
-    await logDebug("Startup scan found no unread junk messages to clear.");
+    await logDebug(`${sourceLabel} found no unread junk messages to clear.`);
   }
 
-  return totalUpdated;
+  const summary = createCleanupSummary({
+    sourceLabel,
+    totalUpdated,
+    scannedFolderCount: junkFolders.length,
+    matchedFolderNames,
+    reason: junkFolders.length > 0 ? "completed" : "no-matching-folders"
+  });
+
+  await setLastCleanupSummary(summary);
+  return summary;
 }

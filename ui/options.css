@@ -124,10 +124,13 @@ h1 {
 }
 
 .hero-badge {
-  display: grid;
-  align-content: space-between;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   min-height: 100%;
-  padding: 14px 14px 12px;
+  padding: 16px 14px 14px;
   border: 1px solid rgba(31, 56, 82, 0.16);
   border-radius: 16px;
   background:
@@ -144,15 +147,19 @@ h1 {
 }
 
 .hero-badge-value {
-  margin-top: 4px;
+  margin-top: 10px;
   font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
-  font-size: 34px;
-  line-height: 0.95;
+  font-size: 58px;
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  text-shadow: 0 6px 18px rgba(8, 18, 29, 0.2);
 }
 
 .hero-badge-foot {
+  max-width: 150px;
+  margin-top: 8px;
   font-size: 11px;
-  line-height: 1.4;
+  line-height: 1.45;
   color: rgba(247, 251, 255, 0.72);
 }
 
@@ -238,6 +245,11 @@ h1 {
 
 .settings-section .setting:first-of-type {
   border-top: 0;
+}
+
+.setting-inline {
+  margin-bottom: 10px;
+  padding-top: 0;
 }
 
 .setting-copy {
@@ -349,6 +361,7 @@ input[type="number"] {
 
 .account-list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: 6px;
 }
@@ -357,8 +370,9 @@ input[type="number"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 10px;
+  min-height: 64px;
+  padding: 9px 11px;
   border: 1px solid rgba(214, 222, 232, 0.98);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.86);
@@ -366,18 +380,24 @@ input[type="number"] {
 
 .account-meta {
   display: grid;
-  gap: 4px;
+  gap: 3px;
+  min-width: 0;
 }
 
 .account-meta strong {
   font-size: 14px;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .account-meta small {
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.35;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .account-item input {
@@ -419,6 +439,11 @@ input[type="number"] {
 
 .account-item input:checked + .account-toggle::after {
   transform: translateX(19px);
+}
+
+.account-item:hover {
+  border-color: rgba(93, 121, 148, 0.72);
+  background: rgba(250, 252, 255, 0.96);
 }
 
 .about-grid {
@@ -486,6 +511,10 @@ input[type="number"] {
   padding: 2px 2px 0;
 }
 
+.tool-actions {
+  padding-top: 0;
+}
+
 button {
   padding: 10px 14px;
   border: 0;
@@ -519,6 +548,82 @@ button:hover {
   font-size: 13px;
 }
 
+.summary-card {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(214, 222, 232, 0.96);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.summary-label {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.summary-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.summary-history-wrap {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(214, 222, 232, 0.96);
+}
+
+.summary-history-label {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.summary-history {
+  display: grid;
+  gap: 6px;
+  max-height: 190px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.summary-history-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.summary-history-item {
+  display: grid;
+  gap: 2px;
+  padding: 8px 9px;
+  border: 1px solid rgba(214, 222, 232, 0.92);
+  border-radius: 10px;
+  background: rgba(248, 251, 254, 0.92);
+}
+
+.summary-history-main {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.summary-history-meta {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 @media (max-width: 620px) {
   .panel {
     margin: 10px;
@@ -543,6 +648,10 @@ button:hover {
     font-size: 32px;
   }
 
+  .hero-badge-value {
+    font-size: 48px;
+  }
+
   .tabs,
   .about-grid {
     grid-template-columns: 1fr;
@@ -557,6 +666,10 @@ button:hover {
   .setting,
   .account-item {
     flex-wrap: wrap;
+  }
+
+  .account-list {
+    grid-template-columns: 1fr;
   }
 
   .number-wrap {

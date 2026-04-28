@@ -100,6 +100,7 @@ Not yet confirmed in this workspace:
 - moved-message handling via `messages.onMoved`
 - updated-message handling via `messages.onUpdated`
 - queue behavior under heavy burst conditions
+- Gmail spam behavior may still need provider-specific investigation even when other spam folders work
 
 ## Helpful Developer Checks
 

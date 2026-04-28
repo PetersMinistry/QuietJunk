@@ -12,6 +12,9 @@ const startupDebounceMsInput = document.getElementById("startupDebounceMs");
 const processedMessageTtlMsInput = document.getElementById("processedMessageTtlMs");
 const accountsList = document.getElementById("accounts-list");
 const cleanupCounter = document.getElementById("cleanup-counter");
+const runCleanupNowButton = document.getElementById("run-cleanup-now");
+const lastCleanupSummary = document.getElementById("last-cleanup-summary");
+const cleanupHistory = document.getElementById("cleanup-history");
 const resetCounterButton = document.getElementById("reset-counter");
 const status = document.getElementById("status");
 const tabButtons = [...document.querySelectorAll(".tab")];
@@ -62,6 +65,58 @@ function createAccountRow(account, settings) {
   return wrapper;
 }
 
+function renderCleanupSummary(summary) {
+  if (!summary) {
+    lastCleanupSummary.textContent = "No cleanup summary yet.";
+    return;
+  }
+
+  const folderList = summary.matchedFolderNames?.length
+    ? summary.matchedFolderNames.join(", ")
+    : "none";
+
+  lastCleanupSummary.textContent =
+    `${summary.totalUpdated} cleared | ${summary.scannedFolderCount} folder(s) scanned | ` +
+    `folders: ${folderList} | reason: ${summary.reason} | ${summary.ranAt}`;
+}
+
+function formatHistoryEntry(summary) {
+  const sourceLabel = summary.sourceLabel?.replaceAll("-", " ") || "cleanup run";
+  const main = `${summary.totalUpdated} cleared from ${summary.scannedFolderCount} folder(s)`;
+  const meta = `${sourceLabel} | ${summary.reason} | ${summary.ranAt}`;
+  return { main, meta };
+}
+
+function renderCleanupHistory(history) {
+  cleanupHistory.textContent = "";
+
+  if (!history?.length) {
+    const emptyState = document.createElement("p");
+    emptyState.className = "summary-history-empty";
+    emptyState.textContent = "No cleanup history yet.";
+    cleanupHistory.append(emptyState);
+    return;
+  }
+
+  for (const summary of history) {
+    const item = document.createElement("div");
+    item.className = "summary-history-item";
+
+    const main = document.createElement("p");
+    main.className = "summary-history-main";
+
+    const meta = document.createElement("p");
+    meta.className = "summary-history-meta";
+
+    const entry = formatHistoryEntry(summary);
+    main.textContent = entry.main;
+    meta.textContent = entry.meta;
+
+    item.append(main, meta);
+    cleanupHistory.append(item);
+  }
+}
+
 async function renderAccounts(settings) {
   const accounts = await messenger.accounts.list(false);
   accountsList.textContent = "";
@@ -69,7 +124,7 @@ async function renderAccounts(settings) {
   if (accounts.length === 0) {
     const emptyState = document.createElement("p");
     emptyState.className = "status";
-    emptyState.textContent = "No accounts are currently available to configure.";
+    emptyState.textContent = "No accounts are available to configure right now.";
     accountsList.append(emptyState);
     return;
   }
@@ -81,16 +136,19 @@ async function renderAccounts(settings) {
 
 async function loadSettings() {
   const settings = await getSettings();
-  const manifest = messenger.runtime.getManifest();
+  applySettingsToView(settings);
+  await renderAccounts(settings);
+}
+
+function applySettingsToView(settings) {
   enabledInput.checked = settings.enabled;
   debugInput.checked = settings.debug;
   markExistingOnStartupInput.checked = settings.markExistingOnStartup;
   startupDebounceMsInput.value = settings.startupDebounceMs;
   processedMessageTtlMsInput.value = settings.processedMessageTtlMs;
   cleanupCounter.textContent = String(settings.totalMarkedRead || 0);
-  aboutVersion.textContent = manifest.version;
-  aboutManifest.textContent = `MV${manifest.manifest_version}`;
-  await renderAccounts(settings);
+  renderCleanupSummary(settings.lastCleanupSummary);
+  renderCleanupHistory(settings.cleanupHistory);
 }
 
 for (const button of tabButtons) {
@@ -131,6 +189,28 @@ form.addEventListener("submit", async (event) => {
   }, 1600);
 });
 
+runCleanupNowButton.addEventListener("click", async () => {
+  runCleanupNowButton.disabled = true;
+  status.textContent = "Running cleanup...";
+
+  try {
+    const summary = await messenger.runtime.sendMessage({
+      type: "quietjunk:run-cleanup-now"
+    });
+
+    const nextSettings = await getSettings();
+    cleanupCounter.textContent = String(nextSettings.totalMarkedRead || 0);
+    renderCleanupSummary(summary);
+    renderCleanupHistory(nextSettings.cleanupHistory);
+    status.textContent = `Cleanup finished: ${summary.totalUpdated} cleared.`;
+  } finally {
+    runCleanupNowButton.disabled = false;
+    window.setTimeout(() => {
+      status.textContent = "";
+    }, 2200);
+  }
+});
+
 resetCounterButton.addEventListener("click", async () => {
   const nextSettings = await resetCleanupCount();
   cleanupCounter.textContent = String(nextSettings.totalMarkedRead || 0);
@@ -139,5 +219,31 @@ resetCounterButton.addEventListener("click", async () => {
     status.textContent = "";
   }, 1600);
 });
+
+messenger.storage.onChanged.addListener(async (changes, areaName) => {
+  if (areaName !== "local") {
+    return;
+  }
+
+  if (
+    !changes.totalMarkedRead &&
+    !changes.lastCleanupSummary &&
+    !changes.cleanupHistory &&
+    !changes.enabled &&
+    !changes.debug &&
+    !changes.markExistingOnStartup &&
+    !changes.startupDebounceMs &&
+    !changes.processedMessageTtlMs
+  ) {
+    return;
+  }
+
+  const nextSettings = await getSettings();
+  applySettingsToView(nextSettings);
+});
+
+const manifest = messenger.runtime.getManifest();
+aboutVersion.textContent = manifest.version;
+aboutManifest.textContent = `MV${manifest.manifest_version}`;
 
 await loadSettings();

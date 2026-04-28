@@ -15,17 +15,25 @@ All notable changes to QuietJunk should be recorded here.
 - Duplicate-processing guard window to reduce repeated handling during sync bursts.
 - Cleanup counter with reset action.
 - Minimal options UI with Settings and About tabs.
-- Basic SVG icon set.
+- Cleanup diagnostics with manual run support and a capped recent-run history.
+- Packaging setup with `dist/`, `.gitignore`, and `package-xpi.ps1`.
 - Project docs set including handoff, roadmap, and privacy policy.
 
 ### Changed
 
 - Extended the project past the original zero-UI MVP into control and stability work.
 - Added UI controls for startup debounce, duplicate guard timing, and cleanup counter reset.
+- Switched startup cleanup scheduling from `setTimeout` to the alarms API and added explicit startup/install listeners to improve startup reliability.
+- Changed startup scanning to trust the junk folder location itself instead of requiring the per-message `junk` flag.
+- Added a manual cleanup path that can run independently of the startup-only toggle.
+- Reworked the options UI with the final PNG logo set, tighter account controls, live counter/history updates, and more natural user-facing copy.
+- Fixed the options page so storage-backed values repaint live instead of requiring a manual refresh.
+- Fixed the options page hydration race that could briefly show toggles off and timing inputs blank on install.
 
 ### Pending
 
 - Folder-level exclusions.
 - Event coverage for moved or updated messages.
 - Queue / processing manager.
-- Branding pass with final logo.
+- Gmail spam compatibility investigation if Gmail remains inconsistent with other providers.
+- Install 7-Zip locally before the new packaging script can produce XPI artifacts on this machine.
