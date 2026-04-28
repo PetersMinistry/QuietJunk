@@ -29,6 +29,8 @@ All notable changes to QuietJunk should be recorded here.
 - Reworked the options UI with the final PNG logo set, tighter account controls, live counter/history updates, and more natural user-facing copy.
 - Fixed the options page so storage-backed values repaint live instead of requiring a manual refresh.
 - Fixed the options page hydration race that could briefly show toggles off and timing inputs blank on install.
+- Built the release packaging flow around the native Windows zip APIs instead of an external archiver dependency.
+- Fixed the XPI packaging path bug so packaged assets use valid forward-slash archive paths and load correctly in Thunderbird.
 
 ### Pending
 
@@ -36,4 +38,3 @@ All notable changes to QuietJunk should be recorded here.
 - Event coverage for moved or updated messages.
 - Queue / processing manager.
 - Gmail spam compatibility investigation if Gmail remains inconsistent with other providers.
-- Install 7-Zip locally before the new packaging script can produce XPI artifacts on this machine.

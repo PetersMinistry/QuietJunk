@@ -1,6 +1,6 @@
 # Release Checklist
 
-Last updated: 2026-04-27
+Last updated: 2026-04-28
 
 ## Before Version Bump
 
@@ -38,10 +38,12 @@ Last updated: 2026-04-27
 - confirm docs are current
 - confirm version number is updated
 - confirm release notes are reflected in `CHANGELOG.md`
+- run `package-xpi.ps1`
+- confirm the generated XPI loads with working icon and options assets
 
 ## Final Review
 
 - verify privacy wording still matches actual behavior
 - verify no unfinished UI text remains
 - verify no debug-only placeholders remain in user-facing surfaces
-- create the release artifact using the chosen Thunderbird packaging flow
+- create the release artifact using `package-xpi.ps1`

@@ -1,10 +1,18 @@
 # Testing Guide
 
-Last updated: 2026-04-27
+Last updated: 2026-04-28
 
 ## Goal
 
 Validate that QuietJunk behaves correctly in real Thunderbird environments before packaging or release.
+
+Current supported test target:
+
+- Thunderbird accounts/folders that expose real junk metadata
+
+Current out-of-scope or best-effort target:
+
+- Gmail spam behavior, unless later testing proves there is a safe metadata-based path
 
 ## Basic Setup
 
@@ -21,9 +29,11 @@ Validate that QuietJunk behaves correctly in real Thunderbird environments befor
 Confirm:
 
 - the preferences page opens
+- the packaged `.xpi` shows the proper icon
 - the Settings and About tabs switch correctly
 - current values load without errors
 - the cleanup counter renders
+- the startup timing fields are populated with stored/default values
 
 ### 2. Settings Persistence
 
@@ -58,6 +68,7 @@ Confirm:
 - QuietJunk waits for the configured debounce delay
 - startup scan runs
 - unread junk mail is marked as read
+- the options page reflects updated count/history without needing a manual refresh if it is already open
 
 ### 5. Account Exclusion
 
@@ -80,12 +91,23 @@ Confirm:
 - the displayed count returns to `0`
 - no visible UI error occurs
 
+### 7. Packaged Build
+
+Install the built XPI from `dist/`.
+
+Confirm:
+
+- the add-on icon renders correctly in Thunderbird
+- the Options screen loads correctly from the packaged build
+- CSS and JavaScript assets load normally
+- packaged behavior matches the temporary add-on behavior
+
 ## Higher-Risk Scenarios
 
 These are especially important before calling the extension stable:
 
 - multi-account profiles
-- Gmail IMAP junk behavior
+- Gmail IMAP junk behavior if that work is intentionally reopened later
 - Outlook IMAP junk behavior
 - startup with many unread junk messages
 - sync bursts with repeated or overlapping events

@@ -1,21 +1,52 @@
 # QuietJunk Handoff
 
-Last updated: 2026-04-27
+Last updated: 2026-04-28
 
 ## Project Summary
 
-QuietJunk is a Thunderbird MailExtension (Manifest V3) designed to silently reduce false unread noise by automatically marking junk messages as read.
+QuietJunk is a Thunderbird MailExtension (Manifest V3) that quietly marks junk mail as read so spam stops inflating unread counts.
 
-Current tagline:
+Repo baseline now considered stable for local use:
+
+- packaged `.xpi` installs correctly
+- options UI loads correctly from the packaged build
+- startup cleanup works in Thunderbird
+- manual cleanup works in Thunderbird
+- live counter and cleanup history updates work in the options page
+
+Current public-facing manifest description:
 
 - Silently clears your spam. No noise. No clutter.
 
+## Current Supported Behavior
+
+QuietJunk is currently intended to support:
+
+- Thunderbird accounts and folders that expose real junk-folder metadata
+- automatic mark-as-read on new junk mail
+- startup cleanup after a configurable delay
+- manual cleanup from the options page
+- account-level exclusions
+
+QuietJunk is not currently claiming support for:
+
+- Gmail-specific spam handling quirks
+- folder-name guessing like `Spam` or `Junk` without Thunderbird junk metadata
+- moved-message cleanup via `messages.onMoved`
+- updated-message cleanup via `messages.onUpdated`
+
+For now, Gmail should be treated as:
+
+- unsupported or partially supported pending future investigation
+
+That is an intentional product/safety choice, not a forgotten bugfix.
+
 ## Current State
 
-The extension is beyond the original zero-UI MVP and now includes:
+The extension now includes:
 
 - background listener registration for new mail
-- junk-folder detection across accounts
+- junk-folder detection across accounts using Thunderbird metadata
 - automatic mark-as-read behavior for unread junk messages
 - startup junk scan with configurable debounce
 - enable/disable toggle
@@ -23,8 +54,11 @@ The extension is beyond the original zero-UI MVP and now includes:
 - debug logging toggle
 - duplicate-processing guard window
 - running cleanup counter
-- counter reset action
+- manual cleanup trigger
+- last cleanup summary
+- capped recent cleanup history
 - options UI with Settings and About tabs
+- packaged XPI build flow
 
 ## Current File Map
 
@@ -37,6 +71,9 @@ The extension is beyond the original zero-UI MVP and now includes:
 - `ui/options.css`
 - `ui/options.js`
 - `icons/`
+- `dist/`
+- `package-xpi.ps1`
+- `.gitignore`
 - `docs/HANDOFF.md`
 - `CHANGELOG.md`
 - `PRIVACY.md`
@@ -50,7 +87,7 @@ The extension is beyond the original zero-UI MVP and now includes:
 
 - `messages.onNewMailReceived` is registered from `src/background.js`
 - new mail events are passed to `handleNewMailEvent`
-- only junk folders are processed
+- only folders exposed by Thunderbird as junk folders are processed
 - unread messages are marked as read
 - recently processed message IDs are cached temporarily to reduce duplicate handling during event bursts
 
@@ -60,7 +97,7 @@ The extension is beyond the original zero-UI MVP and now includes:
 - if enabled, QuietJunk schedules an alarm using the Thunderbird alarms API
 - startup scheduling is triggered on background load, startup, install, and relevant settings changes
 - after the configured `startupDebounceMs`, `processExistingUnreadJunk()` scans discovered junk folders
-- startup scans now trust the junk folder location and query unread messages in that folder, instead of relying on the per-message `junk` flag
+- startup scans trust the junk folder location and query unread messages in that folder, instead of relying on the per-message `junk` flag
 - unread junk messages found during startup are marked as read
 
 ### Manual Cleanup Flow
@@ -68,6 +105,7 @@ The extension is beyond the original zero-UI MVP and now includes:
 - the options UI can request an immediate cleanup run
 - manual cleanup uses the same scan logic as startup cleanup
 - manual cleanup is allowed even if the startup-only toggle is disabled
+- the options page now reflects cleanup results live without needing a manual refresh
 
 ### Settings Storage
 
@@ -80,12 +118,31 @@ Stored in `browser.storage.local` via `src/settings.js`:
 - `startupDebounceMs`
 - `processedMessageTtlMs`
 - `totalMarkedRead`
+- `lastCleanupSummary`
+- `cleanupHistory`
+
+## Packaging Flow
+
+Packaging now lives in:
+
+- `package-xpi.ps1`
+- `dist/`
+
+Current packaging notes:
+
+- packaging uses native Windows zip APIs from PowerShell/.NET
+- `dist/QuietJunk-0.1.0.xpi` has been built successfully in this repo
+- a packaging bug was fixed where Windows-style backslashes inside the archive broke icons and options assets
+- the packager now writes proper zip entry paths like `ui/options.html`
 
 ## Implemented vs Planned
 
 ### Implemented
 
 - Phase 1 core listener and read-marking behavior
+- startup cleanup with alarms-based scheduling
+- manual cleanup
+- live cleanup diagnostics
 - Phase 2 minimal options UI
 - Phase 2 enable/disable
 - Phase 2 account-level exclusions
@@ -93,6 +150,7 @@ Stored in `browser.storage.local` via `src/settings.js`:
 - Phase 3 startup debounce
 - Phase 3 duplicate-processing guard
 - Phase 3 debug logging mode
+- local packaging flow and `dist` output
 
 ### Not Implemented Yet
 
@@ -118,9 +176,8 @@ Highest-value next steps:
 1. Add folder-level exclusions.
 2. Add `messages.onMoved` support for messages that are classified or moved after receipt.
 3. Introduce a proper queue / processing manager for burst handling.
-4. Improve branding hierarchy in the options header so `QuietJunk` leads more clearly than the descriptive tagline.
-5. Integrate the final logo once provided.
-6. Investigate Gmail spam behavior if Gmail junk remains inconsistent while other accounts are working.
+4. Improve cleanup summary readability for multi-account runs by showing account + folder labels more clearly.
+5. Investigate Gmail only if a safe metadata-based path becomes clear.
 
 ## Validation Status
 
@@ -130,18 +187,23 @@ Confirmed in this workspace:
 - `src/background.js` syntax check passed
 - `src/spamHandler.js` syntax check passed
 - `ui/options.js` syntax check passed
+- the native packaging script built `dist/QuietJunk-0.1.0.xpi`
+- the packaged build was re-tested after the archive path fix
+- startup cleanup worked in Thunderbird
+- manual cleanup worked in Thunderbird
+- live counter/history repaint worked in Thunderbird
 
 Not yet confirmed in this workspace:
 
-- full Thunderbird runtime behavior across real junk events
-- startup scan behavior across actual restarts
-- account exclusion behavior in live Thunderbird profiles
-- multi-account and high-volume IMAP scenarios
-- Gmail spam-folder behavior may still differ from other providers and should be treated as an open compatibility check
+- full Gmail spam behavior
+- folder exclusion behavior because folder exclusions are not built yet
+- moved-message handling via `messages.onMoved`
+- updated-message handling via `messages.onUpdated`
+- queue behavior under heavy burst conditions
 
 ## Notes For Future Conversations
 
-- The product name should likely be visually promoted over the descriptive line in the top preferences hero.
-- The user plans to provide a logo later for integration into the options UI.
 - Keep this handoff updated as a living history and project status log, not just static setup notes.
+- Do not broaden junk detection with simple folder-name guessing unless there is a clearly safe reason.
+- Gmail is intentionally not part of the current supported baseline.
 - Use `TESTING.md` and `RELEASE_CHECKLIST.md` as the default operational docs for future validation and packaging passes.

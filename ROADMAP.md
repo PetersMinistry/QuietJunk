@@ -4,21 +4,26 @@
 
 QuietJunk is between the original MVP and early stability/configuration work.
 
+Current stable baseline:
+
+- packaged local XPI works
+- startup/manual cleanup works for supported Thunderbird junk folders
+- Gmail is intentionally not part of the supported baseline right now
+
 ## Near Term
 
 ### 1. Live Validation
 
-- test new junk delivery behavior in Thunderbird
-- test startup cleanup after restart
+- keep validating new junk delivery behavior in Thunderbird
+- keep validating startup cleanup after restart
 - test multiple accounts
 - test excluded-account behavior
-- investigate Gmail spam-folder behavior separately if Gmail remains inconsistent
+- leave Gmail alone unless support is intentionally reopened later
 
 ### 2. Control Improvements
 
 - add folder-level exclusions
-- improve preferences clarity and brand hierarchy
-- integrate final logo artwork
+- improve cleanup summary clarity for multi-account runs
 
 ### 3. Stability Improvements
 

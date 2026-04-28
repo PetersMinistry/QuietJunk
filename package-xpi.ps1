@@ -59,12 +59,21 @@ try {
 
   foreach ($file in $stagedFiles) {
     $relativePath = [System.IO.Path]::GetRelativePath($stagingDir, $file.FullName)
-    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
-      $zip,
-      $file.FullName,
-      $relativePath,
+    $zipPath = $relativePath -replace "\\", "/"
+    $entry = $zip.CreateEntry(
+      $zipPath,
       [System.IO.Compression.CompressionLevel]::Optimal
-    ) | Out-Null
+    )
+
+    $entryStream = $entry.Open()
+    $fileStream = [System.IO.File]::OpenRead($file.FullName)
+
+    try {
+      $fileStream.CopyTo($entryStream)
+    } finally {
+      $fileStream.Dispose()
+      $entryStream.Dispose()
+    }
   }
 } finally {
   $zip.Dispose()
