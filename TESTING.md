@@ -58,6 +58,7 @@ Confirm:
 - the message becomes read automatically
 - the cleanup counter increments
 - the console shows expected log output if debug is enabled
+- the debug log clearly identifies the account and folder metadata for the event path
 
 ### 3b. Re-Unread Junk Recovery
 
@@ -141,3 +142,10 @@ Current workspace validations already performed:
 - `src/background.js` syntax check passed
 - `src/spamHandler.js` syntax check passed
 - `ui/options.js` syntax check passed
+
+When comparing a working spam folder to a failing one, enable debug logging and look for:
+
+- trigger path used
+- account label / account id
+- folder path / folder type / `specialUse`
+- whether the folder was recognized as junk

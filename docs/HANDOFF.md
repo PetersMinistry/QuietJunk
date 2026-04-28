@@ -60,6 +60,7 @@ The extension now includes:
 - manual cleanup trigger
 - last cleanup summary
 - capped recent cleanup history
+- account-aware diagnostics in debug logging
 - options UI with Settings and About tabs
 - packaged XPI build flow
 
@@ -132,6 +133,18 @@ Stored in `browser.storage.local` via `src/settings.js`:
 - `totalMarkedRead`
 - `lastCleanupSummary`
 - `cleanupHistory`
+
+## Diagnostics Notes
+
+When debug logging is enabled, QuietJunk now records:
+
+- which trigger fired: new mail, moved-to-junk, updated-to-junk, startup, manual, or maintenance
+- account name and account id
+- folder path/name, folder type, and `specialUse` metadata
+- whether a folder was skipped because it was not recognized as junk
+- whether unread messages were seen but not updated
+
+This is the main tool for comparing a working spam folder against a non-working one during shakeout.
 
 ## Packaging Flow
 
