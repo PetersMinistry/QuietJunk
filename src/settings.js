@@ -4,6 +4,7 @@ export const defaultSettings = {
   excludedAccountIds: [],
   markExistingOnStartup: true,
   startupDebounceMs: 4000,
+  processedMessageTtlMs: 300000,
   totalMarkedRead: 0
 };
 
@@ -40,4 +41,9 @@ export async function incrementCleanupCount(amount) {
   const totalMarkedRead = Number(current.totalMarkedRead || 0) + amount;
   await messenger.storage.local.set({ totalMarkedRead });
   return { ...current, totalMarkedRead };
+}
+
+export async function resetCleanupCount() {
+  await messenger.storage.local.set({ totalMarkedRead: 0 });
+  return getSettings();
 }

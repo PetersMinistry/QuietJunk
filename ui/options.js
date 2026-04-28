@@ -1,12 +1,18 @@
-import { getSettings, updateSettings } from "../src/settings.js";
+import {
+  getSettings,
+  resetCleanupCount,
+  updateSettings
+} from "../src/settings.js";
 
 const form = document.getElementById("settings-form");
 const enabledInput = document.getElementById("enabled");
 const debugInput = document.getElementById("debug");
 const markExistingOnStartupInput = document.getElementById("markExistingOnStartup");
 const startupDebounceMsInput = document.getElementById("startupDebounceMs");
+const processedMessageTtlMsInput = document.getElementById("processedMessageTtlMs");
 const accountsList = document.getElementById("accounts-list");
 const cleanupCounter = document.getElementById("cleanup-counter");
+const resetCounterButton = document.getElementById("reset-counter");
 const status = document.getElementById("status");
 const tabButtons = [...document.querySelectorAll(".tab")];
 const tabPanels = [...document.querySelectorAll(".tab-panel")];
@@ -80,6 +86,7 @@ async function loadSettings() {
   debugInput.checked = settings.debug;
   markExistingOnStartupInput.checked = settings.markExistingOnStartup;
   startupDebounceMsInput.value = settings.startupDebounceMs;
+  processedMessageTtlMsInput.value = settings.processedMessageTtlMs;
   cleanupCounter.textContent = String(settings.totalMarkedRead || 0);
   aboutVersion.textContent = manifest.version;
   aboutManifest.textContent = `MV${manifest.manifest_version}`;
@@ -108,6 +115,10 @@ form.addEventListener("submit", async (event) => {
     debug: debugInput.checked,
     markExistingOnStartup: markExistingOnStartupInput.checked,
     startupDebounceMs: Math.max(0, Number(startupDebounceMsInput.value) || 0),
+    processedMessageTtlMs: Math.max(
+      0,
+      Number(processedMessageTtlMsInput.value) || 0
+    ),
     excludedAccountIds: allAccountIds.filter(
       (accountId) => !includedAccountIds.includes(accountId)
     )
@@ -115,6 +126,15 @@ form.addEventListener("submit", async (event) => {
 
   cleanupCounter.textContent = String(nextSettings.totalMarkedRead || 0);
   status.textContent = "Settings saved.";
+  window.setTimeout(() => {
+    status.textContent = "";
+  }, 1600);
+});
+
+resetCounterButton.addEventListener("click", async () => {
+  const nextSettings = await resetCleanupCount();
+  cleanupCounter.textContent = String(nextSettings.totalMarkedRead || 0);
+  status.textContent = "Cleared counter reset.";
   window.setTimeout(() => {
     status.textContent = "";
   }, 1600);

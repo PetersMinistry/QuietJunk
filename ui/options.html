@@ -108,6 +108,23 @@
                 <span class="number-suffix">ms</span>
               </div>
             </label>
+
+            <label class="setting setting-number">
+              <span class="setting-copy">
+                <strong>Duplicate guard window</strong>
+                <small>Prevents the same junk message from being processed repeatedly during sync bursts.</small>
+              </span>
+              <div class="number-wrap">
+                <input
+                  id="processedMessageTtlMs"
+                  name="processedMessageTtlMs"
+                  type="number"
+                  min="0"
+                  step="1000"
+                />
+                <span class="number-suffix">ms</span>
+              </div>
+            </label>
           </section>
 
           <section class="settings-section">
@@ -155,6 +172,10 @@
             <div>
               <span class="metric-label">Mode</span>
               <strong class="metric-value">Passive cleanup</strong>
+            </div>
+            <div>
+              <span class="metric-label">Counter</span>
+              <button id="reset-counter" class="secondary-button" type="button">Reset cleared count</button>
             </div>
           </section>
 

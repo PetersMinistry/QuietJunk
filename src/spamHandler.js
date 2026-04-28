@@ -1,6 +1,39 @@
 import { logDebug, logError, logInfo } from "./logger.js";
 import { getSettings, incrementCleanupCount } from "./settings.js";
 
+const recentlyProcessedMessages = new Map();
+
+function pruneProcessedMessages(now) {
+  for (const [messageId, expiresAt] of recentlyProcessedMessages) {
+    if (expiresAt > now) {
+      continue;
+    }
+
+    recentlyProcessedMessages.delete(messageId);
+  }
+}
+
+function shouldSkipRecentlyProcessed(messageId, settings, now) {
+  const processedMessageTtlMs = Math.max(
+    0,
+    Number(settings.processedMessageTtlMs) || 0
+  );
+
+  if (processedMessageTtlMs === 0) {
+    return false;
+  }
+
+  pruneProcessedMessages(now);
+
+  const expiresAt = recentlyProcessedMessages.get(messageId);
+  if (expiresAt && expiresAt > now) {
+    return true;
+  }
+
+  recentlyProcessedMessages.set(messageId, now + processedMessageTtlMs);
+  return false;
+}
+
 async function* iterateMessageList(page) {
   for (const message of page.messages) {
     yield message;
@@ -98,9 +131,17 @@ async function markUnreadMessagesAsRead(folder, messageList, sourceLabel) {
   }
 
   let updatedCount = 0;
+  const now = Date.now();
 
   for await (const message of iterateMessageList(messageList)) {
     if (message.read) {
+      continue;
+    }
+
+    if (shouldSkipRecentlyProcessed(message.id, settings, now)) {
+      await logDebug(
+        `Skipping recently processed message ${message.id} in ${getFolderLabel(folder)}.`
+      );
       continue;
     }
 

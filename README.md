@@ -2,13 +2,24 @@
 
 Silently clears your spam. No noise. No clutter.
 
-## Current MVP
+## Current State
 
 - Watches new mail events across folders
 - Detects junk-folder deliveries
 - Marks unread junk messages as read
 - Includes settings for enable/disable, debug logging, startup cleanup, account exclusions, and a cleanup counter
+- Uses a short in-memory duplicate guard to avoid re-processing the same messages during event bursts
+- Exposes the duplicate guard window and cleanup counter reset in the options UI
 - Uses Thunderbird's Add-ons Manager preferences surface as a polished settings and about experience
+
+## Docs
+
+- [Handoff](B:\Codex Projects\GitHub\QuietJunk\docs\HANDOFF.md)
+- [Changelog](B:\Codex Projects\GitHub\QuietJunk\CHANGELOG.md)
+- [Privacy Policy](B:\Codex Projects\GitHub\QuietJunk\PRIVACY.md)
+- [Roadmap](B:\Codex Projects\GitHub\QuietJunk\ROADMAP.md)
+- [Testing Guide](B:\Codex Projects\GitHub\QuietJunk\TESTING.md)
+- [Release Checklist](B:\Codex Projects\GitHub\QuietJunk\RELEASE_CHECKLIST.md)
 
 ## Local Testing
 
@@ -30,3 +41,9 @@ Silently clears your spam. No noise. No clutter.
 - `ui/options.css`
 - `ui/options.js`
 - `icons/`
+- `docs/HANDOFF.md`
+- `CHANGELOG.md`
+- `PRIVACY.md`
+- `ROADMAP.md`
+- `TESTING.md`
+- `RELEASE_CHECKLIST.md`
