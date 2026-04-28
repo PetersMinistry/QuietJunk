@@ -2,7 +2,7 @@ export const defaultSettings = {
   enabled: true,
   debug: false,
   excludedAccountIds: [],
-  markExistingOnStartup: false,
+  markExistingOnStartup: true,
   startupDebounceMs: 4000,
   totalMarkedRead: 0
 };

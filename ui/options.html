@@ -9,16 +9,22 @@
   <body>
     <main class="panel">
       <header class="hero">
-        <div>
+        <div class="hero-copy">
           <p class="eyebrow">QuietJunk</p>
           <h1>Silent spam cleanup</h1>
           <p class="copy">
             Keep junk mail from adding fake unread noise across Thunderbird.
           </p>
+          <div class="hero-strip">
+            <span class="hero-chip">Passive by default</span>
+            <span class="hero-chip">Junk folders only</span>
+            <span class="hero-chip">Cross-account aware</span>
+          </div>
         </div>
-        <div class="hero-badge">
+        <div class="hero-badge" aria-label="Messages cleared">
           <span class="hero-badge-label">Messages cleared</span>
           <strong id="cleanup-counter" class="hero-badge-value">0</strong>
+          <span class="hero-badge-foot">Running total across this profile</span>
         </div>
       </header>
 
@@ -47,49 +53,69 @@
 
       <section id="settings-panel" class="tab-panel is-active" aria-labelledby="tab-settings">
         <form id="settings-form" class="settings">
-          <label class="setting">
-            <span>
-              <strong>Enable QuietJunk</strong>
-              <small>Marks new junk messages as read automatically.</small>
-            </span>
-            <input id="enabled" name="enabled" type="checkbox" />
-          </label>
+          <section class="settings-section">
+            <div class="section-head">
+              <p class="eyebrow">Core Controls</p>
+              <h2>Behavior</h2>
+            </div>
 
-          <label class="setting">
-            <span>
-              <strong>Debug logging</strong>
-              <small>Writes extra diagnostic details to the extension console.</small>
-            </span>
-            <input id="debug" name="debug" type="checkbox" />
-          </label>
+            <label class="setting">
+              <span class="setting-copy">
+                <strong>Enable QuietJunk</strong>
+                <small>Marks new junk messages as read automatically.</small>
+              </span>
+              <span class="toggle">
+                <input id="enabled" name="enabled" type="checkbox" />
+                <span class="toggle-ui" aria-hidden="true"></span>
+              </span>
+            </label>
 
-          <label class="setting">
-            <span>
-              <strong>Mark existing junk on startup</strong>
-              <small>Scans junk folders when the extension starts and clears unread counts.</small>
-            </span>
-            <input id="markExistingOnStartup" name="markExistingOnStartup" type="checkbox" />
-          </label>
+            <label class="setting">
+              <span class="setting-copy">
+                <strong>Debug logging</strong>
+                <small>Writes extra diagnostic details to the extension console.</small>
+              </span>
+              <span class="toggle">
+                <input id="debug" name="debug" type="checkbox" />
+                <span class="toggle-ui" aria-hidden="true"></span>
+              </span>
+            </label>
 
-          <label class="setting">
-            <span>
-              <strong>Startup debounce</strong>
-              <small>Wait this many milliseconds before the startup junk scan begins.</small>
-            </span>
-            <input
-              id="startupDebounceMs"
-              name="startupDebounceMs"
-              type="number"
-              min="0"
-              step="500"
-            />
-          </label>
+            <label class="setting">
+              <span class="setting-copy">
+                <strong>Mark existing junk on startup</strong>
+                <small>Scans junk folders when the extension starts and clears unread counts.</small>
+              </span>
+              <span class="toggle">
+                <input id="markExistingOnStartup" name="markExistingOnStartup" type="checkbox" />
+                <span class="toggle-ui" aria-hidden="true"></span>
+              </span>
+            </label>
 
-          <section class="setting stack">
-            <span>
-              <strong>Excluded accounts</strong>
-              <small>Skip junk cleanup for any account you leave unchecked here.</small>
-            </span>
+            <label class="setting setting-number">
+              <span class="setting-copy">
+                <strong>Startup debounce</strong>
+                <small>Wait this many milliseconds before the startup junk scan begins.</small>
+              </span>
+              <div class="number-wrap">
+                <input
+                  id="startupDebounceMs"
+                  name="startupDebounceMs"
+                  type="number"
+                  min="0"
+                  step="500"
+                />
+                <span class="number-suffix">ms</span>
+              </div>
+            </label>
+          </section>
+
+          <section class="settings-section">
+            <div class="section-head">
+              <p class="eyebrow">Coverage</p>
+              <h2>Account scope</h2>
+              <p class="section-copy">Turn off any account that should keep its own junk behavior.</p>
+            </div>
             <div id="accounts-list" class="account-list"></div>
           </section>
 
