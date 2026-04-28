@@ -2,7 +2,18 @@
 
 All notable changes to QuietJunk should be recorded here.
 
+Current shipped build:
+
+- version: `0.0.3`
+- packaged artifact: `dist/QuietJunk-0.0.3.xpi`
+
 ## [Unreleased]
+
+### Planned Next Version
+
+- next suggested version: `0.0.4`
+
+## [0.0.3] - 2026-04-28
 
 ### Added
 
