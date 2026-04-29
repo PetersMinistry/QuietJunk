@@ -13,6 +13,13 @@ Current shipped build:
 
 - next suggested version: `0.0.4`
 
+### Beta Milestone Notes
+
+- `0.0.4` should represent the next beta-level stabilization checkpoint.
+- Live observation now confirms that incoming spam was automatically marked read in the updated build.
+- Startup cleanup, manual cleanup, packaged install behavior, and at least one real incoming-spam path are now working together as intended.
+- Remaining work is focused on provider/account consistency rather than basic extension behavior.
+
 ## [0.0.3] - 2026-04-28
 
 ### Added
