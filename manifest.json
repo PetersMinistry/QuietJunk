@@ -3,7 +3,7 @@
   "name": "QuietJunk",
   "description": "Silently clears your spam. No noise. No clutter.",
   "version": "0.0.3",
-  "author": "Peter",
+  "author": "Peter Moreno",
   "browser_specific_settings": {
     "gecko": {
       "id": "quietjunk@addons.thunderbird.net",
