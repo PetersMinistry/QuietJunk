@@ -1,6 +1,7 @@
 import { logInfo } from "./logger.js";
 import { ensureSettings, getSettings } from "./settings.js";
 import {
+  handleFolderInfoChanged,
   handleMovedMessages,
   handleNewMailEvent,
   handleUpdatedMessage,
@@ -71,8 +72,9 @@ logInfo("Background script loaded.");
 messenger.messages.onNewMailReceived.addListener(handleNewMailEvent, true);
 messenger.messages.onMoved.addListener(handleMovedMessages);
 messenger.messages.onUpdated.addListener(handleUpdatedMessage);
+messenger.folders.onFolderInfoChanged.addListener(handleFolderInfoChanged);
 
-logInfo("Listening for new mail, moved messages, and junk updates.");
+logInfo("Listening for new mail, moved messages, junk updates, and folder count changes.");
 
 messenger.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === startupScanAlarmName) {
