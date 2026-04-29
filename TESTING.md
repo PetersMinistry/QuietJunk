@@ -78,6 +78,7 @@ Confirm:
 - QuietJunk waits for the configured debounce delay
 - startup scan runs
 - unread junk mail is marked as read
+- if the first startup scan misses a late-loading inbox, one of the startup retries catches it shortly after
 - the options page reflects updated count/history without needing a manual refresh if it is already open
 
 ### 5. Account Exclusion

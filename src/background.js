@@ -8,12 +8,20 @@ import {
 } from "./spamHandler.js";
 
 const startupScanAlarmName = "quietjunk-startup-scan";
+const startupRetryAlarmNames = [
+  "quietjunk-startup-retry-1",
+  "quietjunk-startup-retry-2"
+];
+const startupRetryOffsetsMs = [30000, 90000];
 const maintenanceScanAlarmName = "quietjunk-maintenance-scan";
 const maintenanceScanPeriodMinutes = 1;
 
 async function scheduleStartupScan(settings, reason) {
   if (!settings.enabled || !settings.markExistingOnStartup) {
     await messenger.alarms.clear(startupScanAlarmName);
+    for (const alarmName of startupRetryAlarmNames) {
+      await messenger.alarms.clear(alarmName);
+    }
     return false;
   }
 
@@ -25,6 +33,15 @@ async function scheduleStartupScan(settings, reason) {
   await messenger.alarms.create(startupScanAlarmName, {
     when: Date.now() + startupDebounceMs
   });
+
+  for (let index = 0; index < startupRetryAlarmNames.length; index += 1) {
+    const alarmName = startupRetryAlarmNames[index];
+    const retryOffsetMs = startupRetryOffsetsMs[index];
+
+    await messenger.alarms.create(alarmName, {
+      when: Date.now() + startupDebounceMs + retryOffsetMs
+    });
+  }
 
   return true;
 }
@@ -61,6 +78,17 @@ messenger.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === startupScanAlarmName) {
     processExistingUnreadJunk().catch((error) => {
       console.error("[QuietJunk] Startup junk scan failed.", error);
+    });
+    return;
+  }
+
+  if (startupRetryAlarmNames.includes(alarm.name)) {
+    processExistingUnreadJunk({
+      ignoreStartupSetting: true,
+      sourceLabel: alarm.name,
+      writeSummary: false
+    }).catch((error) => {
+      console.error("[QuietJunk] Startup retry junk scan failed.", error);
     });
     return;
   }

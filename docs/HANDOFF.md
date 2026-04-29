@@ -103,6 +103,7 @@ The extension now includes:
 - if enabled, QuietJunk schedules an alarm using the Thunderbird alarms API
 - startup scheduling is triggered on background load, startup, install, and relevant settings changes
 - after the configured `startupDebounceMs`, `processExistingUnreadJunk()` scans discovered junk folders
+- QuietJunk now also schedules staggered startup retry scans after the first launch pass to catch junk folders that appear later during startup
 - startup scans trust the junk folder location and query unread messages in that folder, instead of relying on the per-message `junk` flag
 - unread junk messages found during startup are marked as read
 

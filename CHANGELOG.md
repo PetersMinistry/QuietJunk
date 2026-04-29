@@ -45,6 +45,7 @@ Current shipped build:
 - Expanded live cleanup coverage to also watch messages moved into junk folders and messages updated to junk in place.
 - Added a quiet recurring maintenance scan so unread junk gets corrected even when Thunderbird misses a live event path.
 - Improved diagnostics so debug logging now reports account-aware folder metadata and trigger paths for junk handling.
+- Added staggered startup retry scans so junk folders that appear later during launch still get a cleanup pass.
 
 ### Pending
 
