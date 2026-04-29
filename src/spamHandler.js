@@ -312,6 +312,41 @@ export async function handleUpdatedMessage(message, changedProperties) {
   );
 }
 
+export async function handleFolderInfoChanged(folder, folderInfo) {
+  const folderDebugLabel = await getFolderDebugLabel(folder);
+  await logDebug(
+    `Received folder-info change for ${folderDebugLabel} with folderInfo=${JSON.stringify(folderInfo || {})}.`
+  );
+
+  if (!isJunkFolder(folder)) {
+    await logDebug(
+      `Ignoring folder-info change because folder is not recognized as junk: ${folderDebugLabel}.`
+    );
+    return 0;
+  }
+
+  const unreadMessageCount = Number(folderInfo?.unreadMessageCount ?? 0);
+  const newMessageCount = Number(folderInfo?.newMessageCount ?? 0);
+
+  if (unreadMessageCount <= 0 && newMessageCount <= 0) {
+    return 0;
+  }
+
+  const unreadJunkMessages = await messenger.messages.query({
+    folderId: folder.id,
+    includeSubFolders: false,
+    read: false,
+    messagesPerPage: 100,
+    autoPaginationTimeout: 0
+  });
+
+  return markUnreadMessagesAsRead(
+    folder,
+    unreadJunkMessages,
+    "folder-info-changed"
+  );
+}
+
 export async function processExistingUnreadJunk(options = {}) {
   const {
     ignoreStartupSetting = false,

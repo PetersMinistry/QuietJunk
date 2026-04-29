@@ -59,6 +59,7 @@ Confirm:
 - the cleanup counter increments
 - the console shows expected log output if debug is enabled
 - the debug log clearly identifies the account and folder metadata for the event path
+- if message-level events are missed, a junk-folder unread-count change can still trigger cleanup
 
 ### 3b. Re-Unread Junk Recovery
 
