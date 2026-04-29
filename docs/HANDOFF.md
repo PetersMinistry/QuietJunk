@@ -92,6 +92,7 @@ The extension now includes:
 - `messages.onNewMailReceived` is registered from `src/background.js`
 - `messages.onMoved` is registered to catch messages that land in junk after later filters move them
 - `messages.onUpdated` is registered conservatively to catch in-place junk updates
+- `folders.onFolderInfoChanged` is registered to catch unread-count changes on junk folders when message-level events are unreliable
 - live events are passed through the spam handler
 - only folders exposed by Thunderbird as junk folders are processed
 - unread messages are marked as read
