@@ -12,15 +12,13 @@ const accountCacheTtlMs = 30000;
 
 function pruneProcessedMessages(now) {
   for (const [messageId, expiresAt] of recentlyProcessedMessages) {
-    if (expiresAt > now) {
-      continue;
+    if (expiresAt <= now) {
+      recentlyProcessedMessages.delete(messageId);
     }
-
-    recentlyProcessedMessages.delete(messageId);
   }
 }
 
-function shouldSkipRecentlyProcessed(messageId, settings, now) {
+function wasRecentlyProcessed(messageId, settings, now) {
   const processedMessageTtlMs = Math.max(
     0,
     Number(settings.processedMessageTtlMs) || 0
@@ -31,14 +29,18 @@ function shouldSkipRecentlyProcessed(messageId, settings, now) {
   }
 
   pruneProcessedMessages(now);
+  return (recentlyProcessedMessages.get(messageId) || 0) > now;
+}
 
-  const expiresAt = recentlyProcessedMessages.get(messageId);
-  if (expiresAt && expiresAt > now) {
-    return true;
+function rememberProcessedMessage(messageId, settings, now) {
+  const processedMessageTtlMs = Math.max(
+    0,
+    Number(settings.processedMessageTtlMs) || 0
+  );
+
+  if (processedMessageTtlMs > 0) {
+    recentlyProcessedMessages.set(messageId, now + processedMessageTtlMs);
   }
-
-  recentlyProcessedMessages.set(messageId, now + processedMessageTtlMs);
-  return false;
 }
 
 async function* iterateMessageList(page) {
@@ -52,13 +54,6 @@ async function* iterateMessageList(page) {
       yield message;
     }
   }
-}
-
-function createMessageList(messages) {
-  return {
-    messages,
-    id: null
-  };
 }
 
 async function getAccountMap() {
@@ -96,24 +91,88 @@ function isExcludedAccount(folder, settings) {
   );
 }
 
+function isScannableFolder(folder) {
+  return Boolean(
+    folder?.accountId &&
+    folder?.id &&
+    !folder.isUnified &&
+    !folder.isVirtual &&
+    !folder.isTag
+  );
+}
+
 function getFolderLabel(folder) {
   return folder?.path || folder?.name || folder?.id || "unknown folder";
 }
 
-async function getFolderDebugLabel(folder) {
-  const accountLabel = await getAccountLabel(folder?.accountId);
-  const folderLabel = getFolderLabel(folder);
-  const folderType = folder?.type || "unknown-type";
-  const specialUse = Array.isArray(folder?.specialUse) && folder.specialUse.length > 0
-    ? folder.specialUse.join(",")
-    : "none";
+async function createFolderContext(folder) {
+  const accountName = await getAccountLabel(folder?.accountId);
 
-  return `${accountLabel} :: ${folderLabel} [type=${folderType}; specialUse=${specialUse}; accountId=${folder?.accountId || "none"}]`;
+  return {
+    account: {
+      id: folder?.accountId || null,
+      name: accountName
+    },
+    folder: {
+      id: folder?.id || null,
+      name: folder?.name || null,
+      path: folder?.path || null,
+      label: getFolderLabel(folder),
+      type: folder?.type || "unknown-type",
+      specialUse: Array.isArray(folder?.specialUse) ? folder.specialUse : []
+    }
+  };
 }
 
-async function getSummaryFolderLabel(folder) {
-  const accountLabel = await getAccountLabel(folder?.accountId);
-  return `${accountLabel} :: ${getFolderLabel(folder)}`;
+function formatFolderContext(context) {
+  return `${context.account.name} :: ${context.folder.label} [type=${context.folder.type}; specialUse=${context.folder.specialUse.join(",") || "none"}; accountId=${context.account.id || "none"}]`;
+}
+
+function createScanResult({
+  sourceLabel,
+  folder,
+  scannedCount = 0,
+  unreadCount = 0,
+  updatedCount = 0,
+  skipReason = null,
+  strategy = "message-query",
+  folderInfoUnreadCount = null,
+  errors = []
+}) {
+  return {
+    sourceLabel,
+    account: folder.account,
+    folder: folder.folder,
+    scannedCount,
+    unreadCount,
+    updatedCount,
+    skipReason,
+    strategy,
+    folderInfoUnreadCount,
+    errors,
+    ranAt: new Date().toISOString()
+  };
+}
+
+async function getFolderInfoSafe(folder, sourceLabel) {
+  if (!folder?.id) {
+    return null;
+  }
+
+  try {
+    return await messenger.folders.getFolderInfo(folder.id);
+  } catch (error) {
+    logError(
+      `Failed to read folder info for ${getFolderLabel(folder)} from ${sourceLabel}.`,
+      error
+    );
+    return null;
+  }
+}
+
+function getUnreadCountFromFolderInfo(folderInfo) {
+  const unreadCount = Number(folderInfo?.unreadMessageCount ?? 0);
+  return Number.isFinite(unreadCount) && unreadCount > 0 ? unreadCount : 0;
 }
 
 function collectJunkFolders(folder, junkFolders = []) {
@@ -147,9 +206,7 @@ async function findJunkFolders(settings) {
   }
 
   if (discoveredFolders.length > 0) {
-    return discoveredFolders.filter(
-      (folder) => folder?.accountId && !folder.isUnified && !folder.isVirtual && !folder.isTag
-    );
+    return discoveredFolders.filter(isScannableFolder);
   }
 
   const queriedFolders = await messenger.folders.query({
@@ -158,66 +215,102 @@ async function findJunkFolders(settings) {
 
   return queriedFolders.filter(
     (folder) =>
-      folder?.accountId &&
-      !folder.isUnified &&
-      !folder.isVirtual &&
-      !folder.isTag &&
+      isScannableFolder(folder) &&
       !settings.excludedAccountIds.includes(folder.accountId)
   );
 }
 
 function createCleanupSummary({
   sourceLabel,
-  totalUpdated,
-  scannedFolderCount,
-  matchedFolderNames,
+  folderResults,
   reason
 }) {
+  const updatedResults = folderResults.filter((result) => result.updatedCount > 0);
+
   return {
     sourceLabel,
-    totalUpdated,
-    scannedFolderCount,
-    matchedFolderNames,
+    totalUpdated: folderResults.reduce(
+      (total, result) => total + result.updatedCount,
+      0
+    ),
+    scannedFolderCount: folderResults.length,
+    matchedFolderNames: folderResults.map(
+      (result) => `${result.account.name} :: ${result.folder.label}`
+    ),
     reason,
+    folderResults,
+    updatedFolderCount: updatedResults.length,
     ranAt: new Date().toISOString()
   };
 }
 
-async function markUnreadMessagesAsRead(folder, messageList, sourceLabel) {
+export async function markUnreadMessagesAsRead(folder, messageList, sourceLabel) {
   const settings = await getSettings();
-  const folderDebugLabel = await getFolderDebugLabel(folder);
+  const folderContext = await createFolderContext(folder);
+  const folderDebugLabel = formatFolderContext(folderContext);
 
   if (!settings.enabled) {
+    const result = createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      skipReason: "extension-disabled"
+    });
     logInfo("Skipping junk cleanup because the extension is disabled.");
-    return 0;
+    return result;
   }
 
   if (!isJunkFolder(folder)) {
+    const result = createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      skipReason: "not-junk-folder"
+    });
     await logDebug(
       `Skipping ${sourceLabel} because folder is not recognized as junk: ${folderDebugLabel}.`
     );
-    return 0;
+    return result;
+  }
+
+  if (!isScannableFolder(folder)) {
+    const result = createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      skipReason: "not-scannable-folder"
+    });
+    await logDebug(
+      `Skipping ${sourceLabel} because folder is not scannable: ${folderDebugLabel}.`
+    );
+    return result;
   }
 
   if (isExcludedAccount(folder, settings)) {
+    const result = createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      skipReason: "excluded-account"
+    });
     await logDebug(
       `Skipping ${sourceLabel} cleanup for excluded account in ${folderDebugLabel}.`
     );
-    return 0;
+    return result;
   }
 
+  let scannedCount = 0;
+  let unreadCount = 0;
   let updatedCount = 0;
-  let unreadSeen = 0;
+  const errors = [];
   const now = Date.now();
 
   for await (const message of iterateMessageList(messageList)) {
+    scannedCount += 1;
+
     if (message.read) {
       continue;
     }
 
-    unreadSeen += 1;
+    unreadCount += 1;
 
-    if (shouldSkipRecentlyProcessed(message.id, settings, now)) {
+    if (wasRecentlyProcessed(message.id, settings, now)) {
       await logDebug(
         `Skipping recently processed message ${message.id} in ${folderDebugLabel}.`
       );
@@ -227,10 +320,15 @@ async function markUnreadMessagesAsRead(folder, messageList, sourceLabel) {
     try {
       await messenger.messages.update(message.id, { read: true });
       updatedCount += 1;
+      rememberProcessedMessage(message.id, settings, now);
       await logDebug(
         `Marked junk message as read from ${sourceLabel} in ${folderDebugLabel}: ${message.subject || "(no subject)"}`
       );
     } catch (error) {
+      errors.push({
+        messageId: message.id,
+        message: error?.message || String(error)
+      });
       logError(
         `Failed to update message ${message.id} in folder ${folderDebugLabel}.`,
         error
@@ -245,92 +343,131 @@ async function markUnreadMessagesAsRead(folder, messageList, sourceLabel) {
     );
   } else {
     await logDebug(
-      `${sourceLabel} saw ${unreadSeen} unread message(s) but updated ${updatedCount} in ${folderDebugLabel}.`
+      `${sourceLabel} scanned ${scannedCount} message(s), saw ${unreadCount} unread, and updated ${updatedCount} in ${folderDebugLabel}.`
     );
   }
 
-  return updatedCount;
+  return createScanResult({
+    sourceLabel,
+    folder: folderContext,
+    scannedCount,
+    unreadCount,
+    updatedCount,
+    skipReason: errors.length > 0 ? "update-errors" : null,
+    errors
+  });
 }
 
-export async function handleNewMailEvent(folder, messageList) {
-  await logDebug(
-    `Received new-mail event for ${await getFolderDebugLabel(folder)}.`
-  );
-  return markUnreadMessagesAsRead(folder, messageList, "new-mail");
+async function markJunkFolderAsRead(
+  folder,
+  sourceLabel,
+  folderInfo,
+  alreadyUpdatedCount = 0
+) {
+  const folderContext = await createFolderContext(folder);
+  const folderDebugLabel = formatFolderContext(folderContext);
+  const unreadCount = getUnreadCountFromFolderInfo(folderInfo);
+  const additionalCount = Math.max(0, unreadCount - alreadyUpdatedCount);
+
+  try {
+    await messenger.folders.markAsRead(folder.id);
+
+    if (additionalCount > 0) {
+      const nextSettings = await incrementCleanupCount(additionalCount);
+      logInfo(
+        `Folder-level cleanup cleared ${additionalCount} remaining unread junk message(s) from ${sourceLabel} in ${folderDebugLabel}. Total cleared: ${nextSettings.totalMarkedRead}.`
+      );
+    } else {
+      await logDebug(
+        `Folder-level cleanup ran for ${sourceLabel} in ${folderDebugLabel}, but folderInfo did not report an unread count.`
+      );
+    }
+
+    return createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      scannedCount: Number(folderInfo?.totalMessageCount ?? 0) || 0,
+      unreadCount,
+      updatedCount: Math.max(unreadCount, alreadyUpdatedCount),
+      strategy: "folder-markAsRead",
+      folderInfoUnreadCount: unreadCount
+    });
+  } catch (error) {
+    logError(
+      `Folder-level mark-as-read failed for ${sourceLabel} in ${folderDebugLabel}.`,
+      error
+    );
+    return createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      scannedCount: Number(folderInfo?.totalMessageCount ?? 0) || 0,
+      unreadCount,
+      updatedCount: 0,
+      skipReason: "folder-markAsRead-error",
+      strategy: "folder-markAsRead",
+      folderInfoUnreadCount: unreadCount,
+      errors: [
+        {
+          message: error?.message || String(error)
+        }
+      ]
+    });
+  }
 }
 
-export async function handleMovedMessages(_originalMessages, movedMessages) {
-  const messagesByFolder = new Map();
+export async function scanJunkFolder(folder, sourceLabel, hintFolderInfo = null) {
+  const settings = await getSettings();
+  const folderContext = await createFolderContext(folder);
+  const folderDebugLabel = formatFolderContext(folderContext);
 
-  for await (const message of iterateMessageList(movedMessages)) {
-    const folder = message?.folder;
-    if (!folder?.id) {
-      continue;
-    }
+  await logDebug(`Scanning ${folderDebugLabel} from ${sourceLabel}.`);
 
-    const existingEntry = messagesByFolder.get(folder.id);
-    if (existingEntry) {
-      existingEntry.messages.push(message);
-      continue;
-    }
-
-    messagesByFolder.set(folder.id, {
-      folder,
-      messages: [message]
+  if (!settings.enabled) {
+    await logDebug(
+      `Skipping ${sourceLabel} because QuietJunk is disabled: ${folderDebugLabel}.`
+    );
+    return createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      skipReason: "extension-disabled"
     });
   }
 
-  let totalUpdated = 0;
-
-  for (const { folder, messages } of messagesByFolder.values()) {
-    await logDebug(
-      `Received moved-to-folder event for ${await getFolderDebugLabel(folder)} with ${messages.length} message(s).`
-    );
-    totalUpdated += await markUnreadMessagesAsRead(
-      folder,
-      createMessageList(messages),
-      "moved-to-junk"
-    );
-  }
-
-  return totalUpdated;
-}
-
-export async function handleUpdatedMessage(message, changedProperties) {
-  await logDebug(
-    `Received updated-message event for ${await getFolderDebugLabel(message?.folder)} with changedProperties=${JSON.stringify(changedProperties || {})}.`
-  );
-
-  if (!changedProperties?.junk || !message?.folder) {
-    return 0;
-  }
-
-  return markUnreadMessagesAsRead(
-    message.folder,
-    createMessageList([message]),
-    "junk-updated"
-  );
-}
-
-export async function handleFolderInfoChanged(folder, folderInfo) {
-  const folderDebugLabel = await getFolderDebugLabel(folder);
-  await logDebug(
-    `Received folder-info change for ${folderDebugLabel} with folderInfo=${JSON.stringify(folderInfo || {})}.`
-  );
-
   if (!isJunkFolder(folder)) {
     await logDebug(
-      `Ignoring folder-info change because folder is not recognized as junk: ${folderDebugLabel}.`
+      `Skipping ${sourceLabel} before query because folder is not recognized as junk: ${folderDebugLabel}.`
     );
-    return 0;
+    return createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      skipReason: "not-junk-folder"
+    });
   }
 
-  const unreadMessageCount = Number(folderInfo?.unreadMessageCount ?? 0);
-  const newMessageCount = Number(folderInfo?.newMessageCount ?? 0);
-
-  if (unreadMessageCount <= 0 && newMessageCount <= 0) {
-    return 0;
+  if (!isScannableFolder(folder)) {
+    await logDebug(
+      `Skipping ${sourceLabel} before query because folder is not scannable: ${folderDebugLabel}.`
+    );
+    return createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      skipReason: "not-scannable-folder"
+    });
   }
+
+  if (isExcludedAccount(folder, settings)) {
+    await logDebug(
+      `Skipping ${sourceLabel} before query because account is excluded: ${folderDebugLabel}.`
+    );
+    return createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      skipReason: "excluded-account"
+    });
+  }
+
+  const folderInfo = hintFolderInfo || await getFolderInfoSafe(folder, sourceLabel);
+  const folderInfoUnreadCount = getUnreadCountFromFolderInfo(folderInfo);
 
   const unreadJunkMessages = await messenger.messages.query({
     folderId: folder.id,
@@ -340,78 +477,144 @@ export async function handleFolderInfoChanged(folder, folderInfo) {
     autoPaginationTimeout: 0
   });
 
-  return markUnreadMessagesAsRead(
+  const result = await markUnreadMessagesAsRead(
     folder,
     unreadJunkMessages,
-    "folder-info-changed"
+    sourceLabel
   );
+
+  if (folderInfoUnreadCount > 0 && result.updatedCount < folderInfoUnreadCount) {
+    await logDebug(
+      `${sourceLabel} message query cleared ${result.updatedCount} of ${folderInfoUnreadCount} folder-reported unread message(s) in ${folderDebugLabel}; trying folder-level markAsRead fallback.`
+    );
+    return markJunkFolderAsRead(
+      folder,
+      sourceLabel,
+      folderInfo,
+      result.updatedCount
+    );
+  }
+
+  return {
+    ...result,
+    folderInfoUnreadCount
+  };
 }
 
-export async function processExistingUnreadJunk(options = {}) {
+export async function scanAllJunkFolders(sourceLabel, options = {}) {
   const {
     ignoreStartupSetting = false,
-    sourceLabel = "startup-scan",
-    writeSummary = true
+    writeSummary = true,
+    writeSummaryOnUpdate = false
   } = options;
   const settings = await getSettings();
 
   if (!settings.enabled || (!ignoreStartupSetting && !settings.markExistingOnStartup)) {
+    const folderResults = [];
     const summary = createCleanupSummary({
       sourceLabel,
-      totalUpdated: 0,
-      scannedFolderCount: 0,
-      matchedFolderNames: [],
+      folderResults,
       reason: settings.enabled ? "startup-disabled" : "extension-disabled"
     });
+
     if (writeSummary) {
       await setLastCleanupSummary(summary);
     }
+
     return summary;
   }
 
   const junkFolders = await findJunkFolders(settings);
+  const folderResults = [];
 
-  let totalUpdated = 0;
-  const matchedFolderNames = await Promise.all(
-    junkFolders.map((folder) => getSummaryFolderLabel(folder))
-  );
-
-  await logDebug(
-    `${sourceLabel} found ${junkFolders.length} junk folder(s): ${matchedFolderNames.join(" | ") || "none"}.`
-  );
+  await logDebug(`${sourceLabel} found ${junkFolders.length} junk folder(s).`);
 
   for (const folder of junkFolders) {
-    const unreadJunkMessages = await messenger.messages.query({
-      folderId: folder.id,
-      includeSubFolders: false,
-      read: false,
-      messagesPerPage: 100,
-      autoPaginationTimeout: 0
-    });
-
-    totalUpdated += await markUnreadMessagesAsRead(
-      folder,
-      unreadJunkMessages,
-      sourceLabel
-    );
+    folderResults.push(await scanJunkFolder(folder, sourceLabel));
   }
+
+  const totalUpdated = folderResults.reduce(
+    (total, result) => total + result.updatedCount,
+    0
+  );
+  const reason = junkFolders.length > 0 ? "completed" : "no-matching-folders";
+  const summary = createCleanupSummary({
+    sourceLabel,
+    folderResults,
+    reason
+  });
 
   if (totalUpdated > 0) {
     logInfo(`${sourceLabel} cleared ${totalUpdated} unread junk message(s).`);
   } else {
-    await logDebug(`${sourceLabel} found no unread junk messages to clear across matched folders.`);
+    await logDebug(`${sourceLabel} found no unread junk messages to clear.`);
   }
 
-  const summary = createCleanupSummary({
-    sourceLabel,
-    totalUpdated,
-    scannedFolderCount: junkFolders.length,
-    matchedFolderNames,
-    reason: junkFolders.length > 0 ? "completed" : "no-matching-folders"
-  });
-
-  if (writeSummary) {
+  if (writeSummary || (writeSummaryOnUpdate && totalUpdated > 0)) {
     await setLastCleanupSummary(summary);
   }
+
   return summary;
+}
+
+export async function handleNewMailEvent(folder) {
+  await logDebug(
+    `Received new-mail event for ${formatFolderContext(await createFolderContext(folder))}.`
+  );
+  return scanJunkFolder(folder, "new-mail");
+}
+
+export async function handleMovedMessages(_originalMessages, movedMessages) {
+  const foldersById = new Map();
+
+  for await (const message of iterateMessageList(movedMessages)) {
+    const folder = message?.folder;
+    if (folder?.id) {
+      foldersById.set(folder.id, folder);
+    }
+  }
+
+  const results = [];
+
+  for (const folder of foldersById.values()) {
+    await logDebug(
+      `Received moved-to-folder event for ${formatFolderContext(await createFolderContext(folder))}.`
+    );
+    results.push(await scanJunkFolder(folder, "moved-to-junk"));
+  }
+
+  return results;
+}
+
+export async function handleUpdatedMessage(message, changedProperties) {
+  await logDebug(
+    `Received updated-message event for ${formatFolderContext(await createFolderContext(message?.folder))} with changedProperties=${JSON.stringify(changedProperties || {})}.`
+  );
+
+  if (!changedProperties?.junk || !message?.folder) {
+    return createScanResult({
+      sourceLabel: "junk-updated",
+      folder: await createFolderContext(message?.folder),
+      skipReason: "not-junk-update"
+    });
+  }
+
+  return scanJunkFolder(message.folder, "junk-updated");
+}
+
+export async function handleFolderInfoChanged(folder, folderInfo) {
+  await logDebug(
+    `Received folder-info change for ${formatFolderContext(await createFolderContext(folder))} with folderInfo=${JSON.stringify(folderInfo || {})}.`
+  );
+
+  return scanJunkFolder(folder, "folder-info-changed", folderInfo);
+}
+
+export async function processExistingUnreadJunk(options = {}) {
+  const {
+    sourceLabel = "startup-scan",
+    ...scanOptions
+  } = options;
+
+  return scanAllJunkFolders(sourceLabel, scanOptions);
 }

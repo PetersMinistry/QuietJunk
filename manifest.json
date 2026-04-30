@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "QuietJunk",
   "description": "Silently clears your spam. No noise. No clutter.",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "author": "Peter Moreno",
   "browser_specific_settings": {
     "gecko": {
@@ -17,6 +17,7 @@
     "96": "icons/icon-96.png"
   },
   "permissions": [
+    "accountsFolders",
     "accountsRead",
     "alarms",
     "messagesRead",

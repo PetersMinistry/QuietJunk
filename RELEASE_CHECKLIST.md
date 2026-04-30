@@ -1,6 +1,14 @@
 # Release Checklist
 
-Last updated: 2026-04-28
+Last updated: 2026-04-30
+
+## Beta Build Discipline
+
+- follow `B:\Codex Projects\GitHub\BETABUILDINFO.md`
+- every installable beta package gets a new `0.0.x` version
+- do not reuse a beta version after rebuilding an installable package for testing
+- keep the previous working beta package in `dist/` until the new one is confirmed usable
+- beta commit messages should name the build, for example `Prepare 0.0.4 beta stabilization build`
 
 ## Before Version Bump
 

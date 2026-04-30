@@ -4,21 +4,56 @@ All notable changes to QuietJunk should be recorded here.
 
 Current shipped build:
 
-- version: `0.0.3`
-- packaged artifact: `dist/QuietJunk-0.0.3.xpi`
+- version: `0.0.5`
+- packaged artifact: `dist/QuietJunk-0.0.5.xpi`
 
 ## [Unreleased]
 
 ### Planned Next Version
 
-- next suggested version: `0.0.4`
+- next suggested version: `0.0.6`
 
-### Beta Milestone Notes
+## [0.0.5] - 2026-04-30
 
-- `0.0.4` should represent the next beta-level stabilization checkpoint.
-- Live observation now confirms that incoming spam was automatically marked read in the updated build.
-- Startup cleanup, manual cleanup, packaged install behavior, and at least one real incoming-spam path are now working together as intended.
-- Remaining work is focused on provider/account consistency rather than basic extension behavior.
+Active patrol stabilization beta. This build responds to real-world testing where spam could arrive while Thunderbird stayed open and remain unread for more than five minutes even after the watchdog build.
+
+### Added
+
+- Added an internal `active-patrol` runtime sweep that rescans supported junk folders every 20 seconds while QuietJunk is enabled.
+- Added an `activePatrolIntervalMs` default setting so the patrol interval can be tuned later without adding more UI clutter now.
+
+### Changed
+
+- Kept the one-minute alarm watchdog as a backup, but no longer depends on alarms alone for all-day minimized Thunderbird runtime cleanup.
+- Runtime patrol scans stay quiet in visible history unless they actually mark spam read.
+
+### Beta Notes
+
+- This is the build to test against the exact failure case: Thunderbird already open, minimized, spam arrives, unread count appears, and no manual cleanup is used.
+- Expected behavior: supported spam should clear within about 20-40 seconds. If it does not, the next diagnostics target is proving whether the background patrol is running and whether the folder is discoverable during that pass.
+- `dist/QuietJunk-0.0.4.xpi` remains the previous stabilization rollback build until `0.0.5` is confirmed.
+
+## [0.0.4] - 2026-04-30
+
+Active incoming spam stabilization beta. This build is meant to prove that unread spam which appears while Thunderbird is already open gets cleared by live triggers, folder-info changes, or the watchdog fallback.
+
+### Added
+
+- Added a folder-level `folders.markAsRead()` fallback for junk folders whose unread count is visible to Thunderbird but whose unread messages are not cleared by message query/update.
+- Added `accountsFolders` permission so supported junk folders can be marked read at the folder level when the message-level path misses visible unread spam.
+
+### Changed
+
+- Refactored cleanup into a mission-oriented scan engine shared by startup, manual, live-event, folder-info, and watchdog paths.
+- Added an internal one-minute watchdog interval so supported junk folders are rescanned while Thunderbird is running.
+- Tightened duplicate-guard behavior so only successfully updated messages are remembered during burst protection.
+
+### Beta Notes
+
+- Focus testing on incoming spam that appears after Thunderbird has already been running for several minutes.
+- If live triggers miss the message, the watchdog should clear it in about 60-90 seconds.
+- Gmail remains best-effort/out of scope unless it works through the same Thunderbird junk metadata path.
+- Keep `dist/QuietJunk-0.0.3.xpi` as the rollback package until `0.0.4` is confirmed usable.
 
 ## [0.0.3] - 2026-04-28
 

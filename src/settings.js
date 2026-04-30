@@ -4,6 +4,8 @@ export const defaultSettings = {
   excludedAccountIds: [],
   markExistingOnStartup: true,
   startupDebounceMs: 4000,
+  watchdogIntervalMs: 60000,
+  activePatrolIntervalMs: 20000,
   processedMessageTtlMs: 300000,
   totalMarkedRead: 0,
   lastCleanupSummary: null,
