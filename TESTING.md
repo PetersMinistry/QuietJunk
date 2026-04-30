@@ -1,6 +1,6 @@
 # Testing Guide
 
-Last updated: 2026-04-29
+Last updated: 2026-04-30
 
 ## Goal
 
@@ -61,6 +61,7 @@ Confirm:
 - the debug log clearly identifies the account and folder metadata for the event path
 - if message-level events are missed, a junk-folder unread-count change can still trigger cleanup
 - if all live-event paths miss it, the watchdog clears it within about one minute
+- if the alarm watchdog is missed or delayed, the active patrol clears it within about 20-40 seconds
 - if the visible folder count says unread spam exists but message query does not clear it, the folder-level fallback clears the junk folder
 
 ### 3a. Moved Or Reclassified Junk
@@ -81,6 +82,7 @@ Confirm:
 
 - QuietJunk flips it back to read automatically
 - if a live event is missed, the watchdog pass corrects it within about a minute
+- if the watchdog does not fire promptly, the active patrol should correct it within about 20-40 seconds
 - if the unread count remains visible after opening the folder, wait one watchdog interval and confirm the folder-level fallback clears it
 
 ### 4. Startup Scan
@@ -146,7 +148,7 @@ Not yet confirmed in this workspace:
 - folder exclusion behavior because folder exclusions are not built yet
 - queue behavior under heavy burst conditions
 - Gmail spam behavior may still need provider-specific investigation even when other spam folders work
-- provider/account consistency for the previously failing non-Gmail spam box after the watchdog stabilization pass
+- provider/account consistency for the previously failing non-Gmail spam box after the active-patrol stabilization pass
 
 ## Helpful Developer Checks
 
@@ -165,3 +167,4 @@ When comparing a working spam folder to a failing one, enable debug logging and 
 - whether the folder was recognized as junk
 - scanned count, unread count, updated count, and skip reason
 - cleanup strategy: `message-query` or `folder-markAsRead`
+- runtime sweep source: `active-patrol` or `watchdog-scan`
