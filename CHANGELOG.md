@@ -16,9 +16,10 @@ Current shipped build:
 ### Beta Milestone Notes
 
 - `0.0.4` should represent the next beta-level stabilization checkpoint.
-- Live observation now confirms that incoming spam was automatically marked read in the updated build.
-- Startup cleanup, manual cleanup, packaged install behavior, and at least one real incoming-spam path are now working together as intended.
-- Remaining work is focused on provider/account consistency rather than basic extension behavior.
+- `0.0.4` should be titled active incoming spam stabilization once the current runtime pass is confirmed in Thunderbird.
+- The stabilization goal is simple: incoming spam in supported junk folders should be marked read while Thunderbird stays open and minimized.
+- Startup cleanup, manual cleanup, folder-info triggers, moved/updated-message triggers, and the watchdog scan now feed the same cleanup engine.
+- Remaining proof work is real-world provider/account consistency, especially comparing the previously working spam box against the previously failing one.
 
 ## [0.0.3] - 2026-04-28
 
@@ -54,6 +55,9 @@ Current shipped build:
 - Improved diagnostics so debug logging now reports account-aware folder metadata and trigger paths for junk handling.
 - Added staggered startup retry scans so junk folders that appear later during launch still get a cleanup pass.
 - Added folder unread-count change handling so junk folders can trigger cleanup even when message events are unreliable.
+- Refactored cleanup into a mission-oriented scan engine shared by startup, manual, live-event, folder-info, and watchdog paths.
+- Added an internal one-minute watchdog interval so supported junk folders are rescanned while Thunderbird is running.
+- Tightened duplicate-guard behavior so only successfully updated messages are remembered during burst protection.
 
 ### Pending
 
