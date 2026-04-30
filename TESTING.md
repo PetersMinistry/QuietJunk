@@ -61,6 +61,7 @@ Confirm:
 - the debug log clearly identifies the account and folder metadata for the event path
 - if message-level events are missed, a junk-folder unread-count change can still trigger cleanup
 - if all live-event paths miss it, the watchdog clears it within about one minute
+- if the visible folder count says unread spam exists but message query does not clear it, the folder-level fallback clears the junk folder
 
 ### 3a. Moved Or Reclassified Junk
 
@@ -80,6 +81,7 @@ Confirm:
 
 - QuietJunk flips it back to read automatically
 - if a live event is missed, the watchdog pass corrects it within about a minute
+- if the unread count remains visible after opening the folder, wait one watchdog interval and confirm the folder-level fallback clears it
 
 ### 4. Startup Scan
 
@@ -162,3 +164,4 @@ When comparing a working spam folder to a failing one, enable debug logging and 
 - folder path / folder type / `specialUse`
 - whether the folder was recognized as junk
 - scanned count, unread count, updated count, and skip reason
+- cleanup strategy: `message-query` or `folder-markAsRead`
