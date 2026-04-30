@@ -17,12 +17,6 @@ Current beta build: `0.0.5`
 - Exposes the duplicate guard window and cleanup counter reset in the options UI
 - Uses Thunderbird's Add-ons Manager preferences surface as a polished settings and about experience
 
-## Docs
-
-- [Changelog](B:\Codex Projects\GitHub\QuietJunk\CHANGELOG.md)
-- [Privacy Policy](B:\Codex Projects\GitHub\QuietJunk\PRIVACY.md)
-- [Roadmap](B:\Codex Projects\GitHub\QuietJunk\ROADMAP.md)
-
 ## Local Testing
 
 1. Open Thunderbird.
