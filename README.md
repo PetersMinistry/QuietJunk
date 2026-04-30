@@ -19,12 +19,9 @@ Current beta build: `0.0.5`
 
 ## Docs
 
-- [Handoff](B:\Codex Projects\GitHub\QuietJunk\docs\HANDOFF.md)
 - [Changelog](B:\Codex Projects\GitHub\QuietJunk\CHANGELOG.md)
 - [Privacy Policy](B:\Codex Projects\GitHub\QuietJunk\PRIVACY.md)
 - [Roadmap](B:\Codex Projects\GitHub\QuietJunk\ROADMAP.md)
-- [Testing Guide](B:\Codex Projects\GitHub\QuietJunk\TESTING.md)
-- [Release Checklist](B:\Codex Projects\GitHub\QuietJunk\RELEASE_CHECKLIST.md)
 
 ## Local Testing
 
@@ -46,9 +43,6 @@ Current beta build: `0.0.5`
 - `ui/options.css`
 - `ui/options.js`
 - `icons/`
-- `docs/HANDOFF.md`
 - `CHANGELOG.md`
 - `PRIVACY.md`
 - `ROADMAP.md`
-- `TESTING.md`
-- `RELEASE_CHECKLIST.md`
