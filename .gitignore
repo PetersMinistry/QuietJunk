@@ -1,2 +1,3 @@
 dist/*.xpi
 dist/build/
+docs/local-only/
