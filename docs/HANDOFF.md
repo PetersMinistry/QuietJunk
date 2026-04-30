@@ -14,6 +14,7 @@ Repo baseline now considered stable for local use:
 - manual cleanup works in Thunderbird
 - live counter and cleanup history updates work in the options page
 - active incoming-spam stabilization is the current priority before new features
+- runtime cleanup now has a folder-level fallback for cases where the visible junk unread count and message query results disagree
 
 Current public-facing manifest description:
 
@@ -30,6 +31,7 @@ QuietJunk is currently intended to support:
 - mark-as-read when junk folder info/counts change
 - startup cleanup after a configurable delay
 - a quiet recurring watchdog scan that catches missed unread junk cases
+- folder-level mark-as-read fallback for Thunderbird-recognized junk folders
 - manual cleanup from the options page
 - account-level exclusions
 
@@ -62,6 +64,7 @@ The extension now includes:
 - capped recent cleanup history
 - account-aware diagnostics in debug logging
 - shared mission engine for startup, manual, live-event, folder-info, and watchdog cleanup
+- folder-level `folders.markAsRead()` fallback when a junk folder reports unread messages that message queries do not clear
 - options UI with Settings and About tabs
 - packaged XPI build flow
 
@@ -97,6 +100,7 @@ The extension now includes:
 - live events are passed through the spam handler
 - only folders exposed by Thunderbird as junk folders are processed
 - unread messages are marked as read
+- if a junk folder reports unread messages but the message-level query/update path does not clear them, QuietJunk uses `folders.markAsRead(folder.id)` as a safety fallback
 - recently processed message IDs are cached temporarily after successful updates to reduce duplicate handling during event bursts
 
 ### Startup Scan Flow
@@ -114,6 +118,7 @@ The extension now includes:
 - a recurring background alarm runs while the extension is enabled
 - it performs a quiet unread-junk sweep once per minute
 - it is meant to catch missed live-event cases while Thunderbird stays open or minimized
+- it uses the folder-level fallback when folder unread counts prove there is still visible spam noise to clear
 - it does not write to the visible cleanup summary/history feed unless it actually clears messages
 
 ### Manual Cleanup Flow
@@ -147,6 +152,7 @@ When debug logging is enabled, QuietJunk now records:
 - folder path/name, folder type, and `specialUse` metadata
 - whether a folder was skipped because it was not recognized as junk
 - whether unread messages were seen but not updated
+- whether cleanup used the normal message-query strategy or the folder-level `markAsRead` fallback
 
 This is the main tool for comparing a working spam folder against a non-working one during shakeout.
 
@@ -171,6 +177,7 @@ Current packaging notes:
 - Phase 1 core listener and read-marking behavior
 - expanded live-event coverage for moved and updated junk messages
 - folder-info change handling for junk folders
+- folder-level mark-as-read fallback for visible unread junk counts
 - startup cleanup with alarms-based scheduling
 - manual cleanup
 - live cleanup diagnostics
