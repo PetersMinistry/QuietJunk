@@ -1,10 +1,10 @@
 # QuietJunk
 
-Silently clears your spam. No noise. No clutter.
+Quiet help for messy inboxes.
 
-QuietJunk is a Thunderbird add-on for people who do not want spam folders nagging them with fake unread counts. When Thunderbird identifies a folder as junk, QuietJunk quietly marks unread spam as read so the rest of your inbox can stay honest.
+QuietJunk is a Thunderbird add-on that keeps spam from messing with your unread count. When Thunderbird recognizes mail as junk, QuietJunk quietly marks it as read so your real inbox can stop sharing attention with the junk drawer.
 
-It does not delete mail, move mail, score messages, upload anything, or try to replace your spam filter. It simply cleans up the unread noise after Thunderbird has already decided something belongs in junk.
+It is intentionally small: no deleting, no moving, no cloud service, no message scoring, no drama. Thunderbird decides what is junk. QuietJunk just cleans up the little unread badge that junk leaves behind.
 
 Current beta build: `0.0.5`
 
@@ -12,10 +12,10 @@ Current beta build: `0.0.5`
 
 - Marks unread junk mail as read automatically.
 - Cleans existing unread junk when Thunderbird starts.
-- Keeps watching while Thunderbird stays open or minimized.
-- Includes a manual cleanup button for quick testing or backup cleanup.
-- Supports account exclusions for inboxes you want QuietJunk to leave alone.
-- Shows a simple cleaned-count and recent cleanup summary in the options page.
+- Keeps an eye on junk folders while Thunderbird stays open or minimized.
+- Gives you a manual cleanup button when you want to bonk the count right now.
+- Lets you exclude accounts that should stay untouched.
+- Shows a quiet count of how much inbox noise it has cleaned up.
 
 ## What It Does Not Do
 
@@ -27,7 +27,7 @@ Current beta build: `0.0.5`
 
 ## Supported Baseline
 
-QuietJunk is built for Thunderbird folders that expose real junk metadata through Thunderbird. If Thunderbird recognizes the folder as junk, QuietJunk can usually clean up the unread count. Provider-specific spam folders, especially Gmail, may behave differently and are still considered best-effort during beta.
+QuietJunk works best with Thunderbird folders that Thunderbird itself exposes as junk folders. Most normal junk folders should behave cleanly. Provider-specific spam folders, especially Gmail, can be weird and are still best-effort during beta.
 
 ## Options
 
@@ -38,7 +38,7 @@ The add-on preferences page includes:
 - startup cleanup delay
 - duplicate-processing guard window
 - account exclusions
-- cleanup counter and reset
+- quiet count and reset
 - manual cleanup
 - optional diagnostic logging
 
