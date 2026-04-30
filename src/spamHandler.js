@@ -135,6 +135,8 @@ function createScanResult({
   unreadCount = 0,
   updatedCount = 0,
   skipReason = null,
+  strategy = "message-query",
+  folderInfoUnreadCount = null,
   errors = []
 }) {
   return {
@@ -145,9 +147,32 @@ function createScanResult({
     unreadCount,
     updatedCount,
     skipReason,
+    strategy,
+    folderInfoUnreadCount,
     errors,
     ranAt: new Date().toISOString()
   };
+}
+
+async function getFolderInfoSafe(folder, sourceLabel) {
+  if (!folder?.id) {
+    return null;
+  }
+
+  try {
+    return await messenger.folders.getFolderInfo(folder.id);
+  } catch (error) {
+    logError(
+      `Failed to read folder info for ${getFolderLabel(folder)} from ${sourceLabel}.`,
+      error
+    );
+    return null;
+  }
+}
+
+function getUnreadCountFromFolderInfo(folderInfo) {
+  const unreadCount = Number(folderInfo?.unreadMessageCount ?? 0);
+  return Number.isFinite(unreadCount) && unreadCount > 0 ? unreadCount : 0;
 }
 
 function collectJunkFolders(folder, junkFolders = []) {
@@ -333,7 +358,64 @@ export async function markUnreadMessagesAsRead(folder, messageList, sourceLabel)
   });
 }
 
-export async function scanJunkFolder(folder, sourceLabel) {
+async function markJunkFolderAsRead(
+  folder,
+  sourceLabel,
+  folderInfo,
+  alreadyUpdatedCount = 0
+) {
+  const folderContext = await createFolderContext(folder);
+  const folderDebugLabel = formatFolderContext(folderContext);
+  const unreadCount = getUnreadCountFromFolderInfo(folderInfo);
+  const additionalCount = Math.max(0, unreadCount - alreadyUpdatedCount);
+
+  try {
+    await messenger.folders.markAsRead(folder.id);
+
+    if (additionalCount > 0) {
+      const nextSettings = await incrementCleanupCount(additionalCount);
+      logInfo(
+        `Folder-level cleanup cleared ${additionalCount} remaining unread junk message(s) from ${sourceLabel} in ${folderDebugLabel}. Total cleared: ${nextSettings.totalMarkedRead}.`
+      );
+    } else {
+      await logDebug(
+        `Folder-level cleanup ran for ${sourceLabel} in ${folderDebugLabel}, but folderInfo did not report an unread count.`
+      );
+    }
+
+    return createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      scannedCount: Number(folderInfo?.totalMessageCount ?? 0) || 0,
+      unreadCount,
+      updatedCount: Math.max(unreadCount, alreadyUpdatedCount),
+      strategy: "folder-markAsRead",
+      folderInfoUnreadCount: unreadCount
+    });
+  } catch (error) {
+    logError(
+      `Folder-level mark-as-read failed for ${sourceLabel} in ${folderDebugLabel}.`,
+      error
+    );
+    return createScanResult({
+      sourceLabel,
+      folder: folderContext,
+      scannedCount: Number(folderInfo?.totalMessageCount ?? 0) || 0,
+      unreadCount,
+      updatedCount: 0,
+      skipReason: "folder-markAsRead-error",
+      strategy: "folder-markAsRead",
+      folderInfoUnreadCount: unreadCount,
+      errors: [
+        {
+          message: error?.message || String(error)
+        }
+      ]
+    });
+  }
+}
+
+export async function scanJunkFolder(folder, sourceLabel, hintFolderInfo = null) {
   const settings = await getSettings();
   const folderContext = await createFolderContext(folder);
   const folderDebugLabel = formatFolderContext(folderContext);
@@ -384,6 +466,9 @@ export async function scanJunkFolder(folder, sourceLabel) {
     });
   }
 
+  const folderInfo = hintFolderInfo || await getFolderInfoSafe(folder, sourceLabel);
+  const folderInfoUnreadCount = getUnreadCountFromFolderInfo(folderInfo);
+
   const unreadJunkMessages = await messenger.messages.query({
     folderId: folder.id,
     includeSubFolders: false,
@@ -392,7 +477,28 @@ export async function scanJunkFolder(folder, sourceLabel) {
     autoPaginationTimeout: 0
   });
 
-  return markUnreadMessagesAsRead(folder, unreadJunkMessages, sourceLabel);
+  const result = await markUnreadMessagesAsRead(
+    folder,
+    unreadJunkMessages,
+    sourceLabel
+  );
+
+  if (folderInfoUnreadCount > 0 && result.updatedCount < folderInfoUnreadCount) {
+    await logDebug(
+      `${sourceLabel} message query cleared ${result.updatedCount} of ${folderInfoUnreadCount} folder-reported unread message(s) in ${folderDebugLabel}; trying folder-level markAsRead fallback.`
+    );
+    return markJunkFolderAsRead(
+      folder,
+      sourceLabel,
+      folderInfo,
+      result.updatedCount
+    );
+  }
+
+  return {
+    ...result,
+    folderInfoUnreadCount
+  };
 }
 
 export async function scanAllJunkFolders(sourceLabel, options = {}) {
@@ -501,7 +607,7 @@ export async function handleFolderInfoChanged(folder, folderInfo) {
     `Received folder-info change for ${formatFolderContext(await createFolderContext(folder))} with folderInfo=${JSON.stringify(folderInfo || {})}.`
   );
 
-  return scanJunkFolder(folder, "folder-info-changed");
+  return scanJunkFolder(folder, "folder-info-changed", folderInfo);
 }
 
 export async function processExistingUnreadJunk(options = {}) {
