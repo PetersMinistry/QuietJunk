@@ -8,8 +8,8 @@ QuietJunk is a Thunderbird MailExtension (Manifest V3) that quietly marks junk m
 
 Repo baseline now considered stable for local use:
 
-- current beta build is `0.0.4`
-- current beta package is `dist/QuietJunk-0.0.4.xpi`
+- current beta build is `0.0.5`
+- current beta package is `dist/QuietJunk-0.0.5.xpi`
 - packaged `.xpi` installs correctly
 - options UI loads correctly from the packaged build
 - startup cleanup works in Thunderbird
@@ -33,6 +33,7 @@ QuietJunk is currently intended to support:
 - mark-as-read when junk folder info/counts change
 - startup cleanup after a configurable delay
 - a quiet recurring watchdog scan that catches missed unread junk cases
+- an active runtime patrol that rescans supported junk folders every 20 seconds while enabled
 - folder-level mark-as-read fallback for Thunderbird-recognized junk folders
 - manual cleanup from the options page
 - account-level exclusions
@@ -65,7 +66,7 @@ The extension now includes:
 - last cleanup summary
 - capped recent cleanup history
 - account-aware diagnostics in debug logging
-- shared mission engine for startup, manual, live-event, folder-info, and watchdog cleanup
+- shared mission engine for startup, manual, live-event, folder-info, watchdog, and active-patrol cleanup
 - folder-level `folders.markAsRead()` fallback when a junk folder reports unread messages that message queries do not clear
 - options UI with Settings and About tabs
 - packaged XPI build flow
@@ -123,6 +124,14 @@ The extension now includes:
 - it uses the folder-level fallback when folder unread counts prove there is still visible spam noise to clear
 - it does not write to the visible cleanup summary/history feed unless it actually clears messages
 
+### Active Patrol Flow
+
+- an internal timer also runs while QuietJunk is enabled
+- it performs a quiet unread-junk sweep every 20 seconds
+- it exists because real-world testing showed unread spam could remain visible for more than five minutes even after the alarm watchdog build
+- it uses the same scan engine and folder-level fallback as manual/startup/watchdog cleanup
+- it stays out of visible cleanup history unless it actually marks spam read
+
 ### Manual Cleanup Flow
 
 - the options UI can request an immediate cleanup run
@@ -140,6 +149,7 @@ Stored in `browser.storage.local` via `src/settings.js`:
 - `markExistingOnStartup`
 - `startupDebounceMs`
 - `watchdogIntervalMs`
+- `activePatrolIntervalMs`
 - `processedMessageTtlMs`
 - `totalMarkedRead`
 - `lastCleanupSummary`
@@ -149,7 +159,7 @@ Stored in `browser.storage.local` via `src/settings.js`:
 
 When debug logging is enabled, QuietJunk now records:
 
-- which trigger fired: new-mail, moved-to-junk, junk-updated, folder-info-changed, startup-scan, startup-retry, manual-scan, or watchdog-scan
+- which trigger fired: new-mail, moved-to-junk, junk-updated, folder-info-changed, startup-scan, startup-retry, manual-scan, watchdog-scan, or active-patrol
 - account name and account id
 - folder path/name, folder type, and `specialUse` metadata
 - whether a folder was skipped because it was not recognized as junk
@@ -168,8 +178,8 @@ Packaging now lives in:
 Current packaging notes:
 
 - packaging uses native Windows zip APIs from PowerShell/.NET
-- `dist/QuietJunk-0.0.4.xpi` has been built successfully in this repo
-- `dist/QuietJunk-0.0.3.xpi` is kept as the rollback beta until `0.0.4` is confirmed usable
+- `dist/QuietJunk-0.0.5.xpi` has been built successfully in this repo
+- `dist/QuietJunk-0.0.4.xpi` is kept as the previous stabilization rollback beta until `0.0.5` is confirmed usable
 - a packaging bug was fixed where Windows-style backslashes inside the archive broke icons and options assets
 - the packager now writes proper zip entry paths like `ui/options.html`
 
@@ -185,6 +195,7 @@ Current packaging notes:
 - manual cleanup
 - live cleanup diagnostics
 - quiet watchdog scan fallback
+- active runtime patrol fallback
 - Phase 2 minimal options UI
 - Phase 2 enable/disable
 - Phase 2 account-level exclusions
@@ -226,11 +237,12 @@ Confirmed in this workspace:
 - `src/background.js` syntax check passed
 - `src/spamHandler.js` syntax check passed
 - `ui/options.js` syntax check passed
-- the native packaging script built `dist/QuietJunk-0.0.4.xpi`
+- the native packaging script built `dist/QuietJunk-0.0.5.xpi`
 - the packaged build was re-tested after the archive path fix
 - startup cleanup worked in Thunderbird
 - manual cleanup worked in Thunderbird
 - live counter/history repaint worked in Thunderbird
+- `0.0.5` was built after active-patrol stabilization code and package-version verification
 
 Not yet confirmed in this workspace:
 
