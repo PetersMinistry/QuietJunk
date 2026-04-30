@@ -77,7 +77,7 @@ After this pass, a failure should fit one of these buckets:
 
 ## Acceptance Criteria For 0.0.4
 
-The next beta milestone is `0.0.4`.
+The current beta milestone is `0.0.4`.
 
 It is earned when:
 
@@ -88,7 +88,7 @@ It is earned when:
 - startup cleanup still works
 - packaged XPI loads cleanly
 
-Until those are true, remain on `0.0.3` and keep treating this as stabilization work.
+Until those are true, keep treating `0.0.4` as a stabilization beta and do not move to a stable release.
 
 ## Required Checks
 
