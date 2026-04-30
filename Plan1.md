@@ -46,6 +46,7 @@ Do not add simple folder-name guessing such as any folder literally named `Spam`
 - The watchdog does not write visible cleanup history unless it actually marks messages read.
 - The duplicate guard prevents repeated work during bursts, but it only remembers messages after a successful update.
 - A failed update must not suppress future attempts for the same unread message.
+- If Thunderbird reports unread messages in a supported junk folder but message query/update does not clear them, use `folders.markAsRead(folder.id)` as the folder-level fallback.
 
 ## Diagnostics
 
@@ -60,6 +61,7 @@ Each cleanup result should include:
 - unread message count
 - updated message count
 - skip reason, if any
+- cleanup strategy: `message-query` or `folder-markAsRead`
 - update errors, if any
 - timestamp
 
