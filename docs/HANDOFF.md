@@ -1,6 +1,6 @@
 # QuietJunk Handoff
 
-Last updated: 2026-04-28
+Last updated: 2026-04-29
 
 ## Project Summary
 
@@ -13,6 +13,7 @@ Repo baseline now considered stable for local use:
 - startup cleanup works in Thunderbird
 - manual cleanup works in Thunderbird
 - live counter and cleanup history updates work in the options page
+- active incoming-spam stabilization is the current priority before new features
 
 Current public-facing manifest description:
 
@@ -26,8 +27,9 @@ QuietJunk is currently intended to support:
 - automatic mark-as-read on new junk mail
 - mark-as-read when messages are moved into junk after arrival
 - mark-as-read when Thunderbird updates a message to junk in place
+- mark-as-read when junk folder info/counts change
 - startup cleanup after a configurable delay
-- a quiet recurring maintenance scan that catches missed unread junk cases
+- a quiet recurring watchdog scan that catches missed unread junk cases
 - manual cleanup from the options page
 - account-level exclusions
 
@@ -35,8 +37,6 @@ QuietJunk is not currently claiming support for:
 
 - Gmail-specific spam handling quirks
 - folder-name guessing like `Spam` or `Junk` without Thunderbird junk metadata
-- moved-message cleanup via `messages.onMoved`
-- updated-message cleanup via `messages.onUpdated`
 
 For now, Gmail should be treated as:
 
@@ -61,6 +61,7 @@ The extension now includes:
 - last cleanup summary
 - capped recent cleanup history
 - account-aware diagnostics in debug logging
+- shared mission engine for startup, manual, live-event, folder-info, and watchdog cleanup
 - options UI with Settings and About tabs
 - packaged XPI build flow
 
@@ -96,7 +97,7 @@ The extension now includes:
 - live events are passed through the spam handler
 - only folders exposed by Thunderbird as junk folders are processed
 - unread messages are marked as read
-- recently processed message IDs are cached temporarily to reduce duplicate handling during event bursts
+- recently processed message IDs are cached temporarily after successful updates to reduce duplicate handling during event bursts
 
 ### Startup Scan Flow
 
@@ -108,12 +109,12 @@ The extension now includes:
 - startup scans trust the junk folder location and query unread messages in that folder, instead of relying on the per-message `junk` flag
 - unread junk messages found during startup are marked as read
 
-### Maintenance Scan Flow
+### Watchdog Scan Flow
 
 - a recurring background alarm runs while the extension is enabled
 - it performs a quiet unread-junk sweep once per minute
-- it is meant to catch missed live-event cases, such as a message being manually flipped back to unread inside a junk folder
-- it does not write to the visible cleanup summary/history feed on every pass
+- it is meant to catch missed live-event cases while Thunderbird stays open or minimized
+- it does not write to the visible cleanup summary/history feed unless it actually clears messages
 
 ### Manual Cleanup Flow
 
@@ -131,6 +132,7 @@ Stored in `browser.storage.local` via `src/settings.js`:
 - `excludedAccountIds`
 - `markExistingOnStartup`
 - `startupDebounceMs`
+- `watchdogIntervalMs`
 - `processedMessageTtlMs`
 - `totalMarkedRead`
 - `lastCleanupSummary`
@@ -140,7 +142,7 @@ Stored in `browser.storage.local` via `src/settings.js`:
 
 When debug logging is enabled, QuietJunk now records:
 
-- which trigger fired: new mail, moved-to-junk, updated-to-junk, startup, manual, or maintenance
+- which trigger fired: new-mail, moved-to-junk, junk-updated, folder-info-changed, startup-scan, startup-retry, manual-scan, or watchdog-scan
 - account name and account id
 - folder path/name, folder type, and `specialUse` metadata
 - whether a folder was skipped because it was not recognized as junk
@@ -158,7 +160,7 @@ Packaging now lives in:
 Current packaging notes:
 
 - packaging uses native Windows zip APIs from PowerShell/.NET
-- `dist/QuietJunk-0.1.0.xpi` has been built successfully in this repo
+- `dist/QuietJunk-0.0.3.xpi` has been built successfully in this repo
 - a packaging bug was fixed where Windows-style backslashes inside the archive broke icons and options assets
 - the packager now writes proper zip entry paths like `ui/options.html`
 
@@ -168,10 +170,11 @@ Current packaging notes:
 
 - Phase 1 core listener and read-marking behavior
 - expanded live-event coverage for moved and updated junk messages
+- folder-info change handling for junk folders
 - startup cleanup with alarms-based scheduling
 - manual cleanup
 - live cleanup diagnostics
-- quiet maintenance scan fallback
+- quiet watchdog scan fallback
 - Phase 2 minimal options UI
 - Phase 2 enable/disable
 - Phase 2 account-level exclusions
@@ -213,7 +216,7 @@ Confirmed in this workspace:
 - `src/background.js` syntax check passed
 - `src/spamHandler.js` syntax check passed
 - `ui/options.js` syntax check passed
-- the native packaging script built `dist/QuietJunk-0.1.0.xpi`
+- the native packaging script built `dist/QuietJunk-0.0.3.xpi`
 - the packaged build was re-tested after the archive path fix
 - startup cleanup worked in Thunderbird
 - manual cleanup worked in Thunderbird
