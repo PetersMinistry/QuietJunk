@@ -17,6 +17,7 @@ Supported triggers:
 - `junk-updated`: scan the message folder when Thunderbird updates junk state in place.
 - `folder-info-changed`: scan a recognized junk folder when Thunderbird reports folder count/info changes.
 - `watchdog-scan`: run a recurring quiet scan while QuietJunk is enabled.
+- `active-patrol`: run a tighter runtime sweep while Thunderbird stays open.
 - `startup-scan`: scan all discovered junk folders after launch.
 - `startup-retry`: run short follow-up scans after startup to catch late-loading IMAP folders.
 - `manual-scan`: keep the options-page button as a proof tool and user escape hatch.
@@ -41,9 +42,10 @@ Do not add simple folder-name guessing such as any folder literally named `Spam`
 ## Runtime Rules
 
 - Event-triggered cleanup scans only the affected folder when possible.
-- Startup, manual, and watchdog cleanup scan all discovered junk folders.
+- Startup, manual, watchdog, and active-patrol cleanup scan all discovered junk folders.
 - The watchdog runs every `60000 ms` by default while QuietJunk is enabled.
-- The watchdog does not write visible cleanup history unless it actually marks messages read.
+- The active patrol runs every `20000 ms` by default while QuietJunk is enabled.
+- The watchdog and active patrol do not write visible cleanup history unless they actually mark messages read.
 - The duplicate guard prevents repeated work during bursts, but it only remembers messages after a successful update.
 - A failed update must not suppress future attempts for the same unread message.
 - If Thunderbird reports unread messages in a supported junk folder but message query/update does not clear them, use `folders.markAsRead(folder.id)` as the folder-level fallback.
@@ -75,20 +77,20 @@ After this pass, a failure should fit one of these buckets:
 - Folder was virtual, unified, tagged, or otherwise not scannable.
 - Provider-specific behavior needs a separate strategy.
 
-## Acceptance Criteria For 0.0.4
+## Acceptance Criteria For 0.0.5
 
-The current beta milestone is `0.0.4`.
+The current beta milestone is `0.0.5`.
 
 It is earned when:
 
 - a fresh incoming spam message in the previously failing non-Gmail inbox is marked read without manual cleanup
-- if immediate event cleanup misses it, the watchdog clears it within the fallback window
+- if immediate event cleanup misses it, active patrol or watchdog cleanup clears it within the fallback window
 - debug logs identify the path that cleared it
 - manual cleanup still works
 - startup cleanup still works
 - packaged XPI loads cleanly
 
-Until those are true, keep treating `0.0.4` as a stabilization beta and do not move to a stable release.
+Until those are true, keep treating `0.0.5` as a stabilization beta and do not move to a stable release.
 
 ## Required Checks
 
