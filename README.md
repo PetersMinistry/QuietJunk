@@ -2,7 +2,7 @@
 
 Silently clears your spam. No noise. No clutter.
 
-Current beta build: `0.0.4`
+Current beta build: `0.0.5`
 
 ## Current State
 
@@ -10,6 +10,7 @@ Current beta build: `0.0.4`
 - Detects junk-folder deliveries
 - Marks unread junk messages as read
 - Uses folder-count and watchdog fallbacks for spam that appears while Thunderbird stays open
+- Uses an active runtime patrol to rescan supported junk folders while Thunderbird stays open
 - Falls back to Thunderbird's folder-level mark-as-read API when a supported junk folder still shows unread spam
 - Includes settings for enable/disable, debug logging, startup cleanup, account exclusions, and a cleanup counter
 - Uses a short in-memory duplicate guard to avoid re-processing the same messages during event bursts
