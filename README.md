@@ -6,6 +6,8 @@ QuietJunk is a Thunderbird add-on that keeps spam from messing with your unread 
 
 It is intentionally small: no deleting, no moving, no cloud service, no message scoring, no drama. Thunderbird decides what is junk. QuietJunk just cleans up the little unread badge that junk leaves behind.
 
+![QuietJunk options screen](assets/screenshots/options-0.0.5.png)
+
 Current beta build: `0.0.5`
 
 ## What It Does
@@ -62,6 +64,7 @@ The add-on preferences page includes:
 - `ui/options.css`
 - `ui/options.js`
 - `icons/`
+- `assets/screenshots/`
 - `CHANGELOG.md`
 - `PRIVACY.md`
 - `ROADMAP.md`
