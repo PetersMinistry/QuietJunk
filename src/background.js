@@ -15,6 +15,15 @@ const startupRetryAlarmNames = [
 ];
 const startupRetryOffsetsMs = [30000, 90000];
 const watchdogScanAlarmName = "quietjunk-watchdog-scan";
+let activePatrolTimerId = null;
+let activePatrolInFlight = false;
+
+function clearActivePatrolTimer() {
+  if (activePatrolTimerId !== null) {
+    clearTimeout(activePatrolTimerId);
+    activePatrolTimerId = null;
+  }
+}
 
 async function scheduleStartupScan(settings, reason) {
   if (!settings.enabled || !settings.markExistingOnStartup) {
@@ -70,6 +79,62 @@ async function scheduleWatchdogScan(settings, reason) {
   return true;
 }
 
+async function runActivePatrolScan() {
+  if (activePatrolInFlight) {
+    return;
+  }
+
+  activePatrolInFlight = true;
+
+  try {
+    await processExistingUnreadJunk({
+      ignoreStartupSetting: true,
+      sourceLabel: "active-patrol",
+      writeSummary: false,
+      writeSummaryOnUpdate: true
+    });
+  } finally {
+    activePatrolInFlight = false;
+  }
+}
+
+async function scheduleActivePatrolScan(settings, reason) {
+  clearActivePatrolTimer();
+
+  if (!settings.enabled) {
+    return false;
+  }
+
+  const activePatrolIntervalMs = Math.max(
+    10000,
+    Number(settings.activePatrolIntervalMs) || 20000
+  );
+
+  logInfo(
+    `Scheduling active junk patrol every ${activePatrolIntervalMs} ms (${reason}).`
+  );
+
+  const scheduleNextPatrol = () => {
+    activePatrolTimerId = setTimeout(async () => {
+      try {
+        await runActivePatrolScan();
+      } catch (error) {
+        console.error("[QuietJunk] Active junk patrol failed.", error);
+      } finally {
+        const nextSettings = await getSettings();
+        if (nextSettings.enabled) {
+          scheduleNextPatrol();
+        } else {
+          clearActivePatrolTimer();
+        }
+      }
+    }, activePatrolIntervalMs);
+  };
+
+  scheduleNextPatrol();
+  return true;
+}
+
 const settings = await ensureSettings();
 
 logInfo("Background script loaded.");
@@ -114,17 +179,20 @@ messenger.alarms.onAlarm.addListener((alarm) => {
 
 await scheduleStartupScan(settings, "background-load");
 await scheduleWatchdogScan(settings, "background-load");
+await scheduleActivePatrolScan(settings, "background-load");
 
 messenger.runtime.onStartup.addListener(async () => {
   const nextSettings = await getSettings();
   await scheduleStartupScan(nextSettings, "runtime.onStartup");
   await scheduleWatchdogScan(nextSettings, "runtime.onStartup");
+  await scheduleActivePatrolScan(nextSettings, "runtime.onStartup");
 });
 
 messenger.runtime.onInstalled.addListener(async () => {
   const nextSettings = await getSettings();
   await scheduleStartupScan(nextSettings, "runtime.onInstalled");
   await scheduleWatchdogScan(nextSettings, "runtime.onInstalled");
+  await scheduleActivePatrolScan(nextSettings, "runtime.onInstalled");
 });
 
 messenger.storage.onChanged.addListener(async (changes, areaName) => {
@@ -136,7 +204,8 @@ messenger.storage.onChanged.addListener(async (changes, areaName) => {
     !changes.enabled &&
     !changes.markExistingOnStartup &&
     !changes.startupDebounceMs &&
-    !changes.watchdogIntervalMs
+    !changes.watchdogIntervalMs &&
+    !changes.activePatrolIntervalMs
   ) {
     return;
   }
@@ -144,6 +213,7 @@ messenger.storage.onChanged.addListener(async (changes, areaName) => {
   const nextSettings = await getSettings();
   await scheduleStartupScan(nextSettings, "settings-change");
   await scheduleWatchdogScan(nextSettings, "settings-change");
+  await scheduleActivePatrolScan(nextSettings, "settings-change");
 });
 
 messenger.runtime.onMessage.addListener((message) => {
