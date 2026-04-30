@@ -1,6 +1,6 @@
 # QuietJunk Handoff
 
-Last updated: 2026-04-29
+Last updated: 2026-04-30
 
 ## Project Summary
 
@@ -8,6 +8,8 @@ QuietJunk is a Thunderbird MailExtension (Manifest V3) that quietly marks junk m
 
 Repo baseline now considered stable for local use:
 
+- current beta build is `0.0.4`
+- current beta package is `dist/QuietJunk-0.0.4.xpi`
 - packaged `.xpi` installs correctly
 - options UI loads correctly from the packaged build
 - startup cleanup works in Thunderbird
@@ -166,7 +168,8 @@ Packaging now lives in:
 Current packaging notes:
 
 - packaging uses native Windows zip APIs from PowerShell/.NET
-- `dist/QuietJunk-0.0.3.xpi` has been built successfully in this repo
+- `dist/QuietJunk-0.0.4.xpi` has been built successfully in this repo
+- `dist/QuietJunk-0.0.3.xpi` is kept as the rollback beta until `0.0.4` is confirmed usable
 - a packaging bug was fixed where Windows-style backslashes inside the archive broke icons and options assets
 - the packager now writes proper zip entry paths like `ui/options.html`
 
@@ -223,7 +226,7 @@ Confirmed in this workspace:
 - `src/background.js` syntax check passed
 - `src/spamHandler.js` syntax check passed
 - `ui/options.js` syntax check passed
-- the native packaging script built `dist/QuietJunk-0.0.3.xpi`
+- the native packaging script built `dist/QuietJunk-0.0.4.xpi`
 - the packaged build was re-tested after the archive path fix
 - startup cleanup worked in Thunderbird
 - manual cleanup worked in Thunderbird
