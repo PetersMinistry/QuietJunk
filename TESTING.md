@@ -1,6 +1,6 @@
 # Testing Guide
 
-Last updated: 2026-04-28
+Last updated: 2026-04-29
 
 ## Goal
 
@@ -50,7 +50,7 @@ Confirm:
 
 ### 3. New Junk Mail Arrival
 
-Send or move an unread test message into a junk folder.
+Send or allow an unread test message to arrive in a supported junk folder.
 
 Confirm:
 
@@ -60,6 +60,17 @@ Confirm:
 - the console shows expected log output if debug is enabled
 - the debug log clearly identifies the account and folder metadata for the event path
 - if message-level events are missed, a junk-folder unread-count change can still trigger cleanup
+- if all live-event paths miss it, the watchdog clears it within about one minute
+
+### 3a. Moved Or Reclassified Junk
+
+Move an unread test message into a supported junk folder, or let Thunderbird classify a message as junk after arrival.
+
+Confirm:
+
+- `moved-to-junk`, `junk-updated`, or `folder-info-changed` appears in debug logging
+- the affected junk folder is scanned
+- the unread message becomes read without opening the options page
 
 ### 3b. Re-Unread Junk Recovery
 
@@ -68,7 +79,7 @@ Take a message that is already sitting in a supported junk folder and manually m
 Confirm:
 
 - QuietJunk flips it back to read automatically
-- if a live event is missed, the maintenance pass corrects it within about a minute
+- if a live event is missed, the watchdog pass corrects it within about a minute
 
 ### 4. Startup Scan
 
@@ -131,10 +142,9 @@ These are especially important before calling the extension stable:
 Not yet confirmed in this workspace:
 
 - folder exclusion behavior because folder exclusions are not built yet
-- moved-message handling via `messages.onMoved`
-- updated-message handling via `messages.onUpdated`
 - queue behavior under heavy burst conditions
 - Gmail spam behavior may still need provider-specific investigation even when other spam folders work
+- provider/account consistency for the previously failing non-Gmail spam box after the watchdog stabilization pass
 
 ## Helpful Developer Checks
 
@@ -151,3 +161,4 @@ When comparing a working spam folder to a failing one, enable debug logging and 
 - account label / account id
 - folder path / folder type / `specialUse`
 - whether the folder was recognized as junk
+- scanned count, unread count, updated count, and skip reason
