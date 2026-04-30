@@ -2,6 +2,8 @@
 
 Silently clears your spam. No noise. No clutter.
 
+Current beta build: `0.0.4`
+
 ## Current State
 
 - Watches new mail events across folders
