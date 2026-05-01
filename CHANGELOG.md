@@ -5,7 +5,7 @@ All notable changes to QuietJunk should be recorded here.
 Current shipped build:
 
 - version: `0.0.5`
-- packaged artifact: `dist/QuietJunk-0.0.5.xpi`
+- release artifact: `QuietJunk-0.0.5.xpi`
 
 ## [Unreleased]
 
@@ -31,7 +31,8 @@ Active patrol stabilization beta. This build responds to real-world testing wher
 
 - This is the build to test against the exact failure case: Thunderbird already open, minimized, spam arrives, unread count appears, and no manual cleanup is used.
 - Expected behavior: supported spam should clear within about 20-40 seconds. If it does not, the next diagnostics target is proving whether the background patrol is running and whether the folder is discoverable during that pass.
-- `dist/QuietJunk-0.0.4.xpi` remains the previous stabilization rollback build until `0.0.5` is confirmed.
+- This is the stable-beta release candidate for supported Thunderbird junk folders.
+- Gmail spam folders are not a supported target right now; exclude Gmail accounts if their spam is already quiet in Thunderbird.
 
 ## [0.0.4] - 2026-04-30
 
@@ -52,8 +53,8 @@ Active incoming spam stabilization beta. This build is meant to prove that unrea
 
 - Focus testing on incoming spam that appears after Thunderbird has already been running for several minutes.
 - If live triggers miss the message, the watchdog should clear it in about 60-90 seconds.
-- Gmail remains best-effort/out of scope unless it works through the same Thunderbird junk metadata path.
-- Keep `dist/QuietJunk-0.0.3.xpi` as the rollback package until `0.0.4` is confirmed usable.
+- Gmail spam folders are out of scope unless intentionally reopened later.
+- Keep the previous `0.0.3` package as a local rollback package until `0.0.4` is confirmed usable.
 
 ## [0.0.3] - 2026-04-28
 
@@ -69,7 +70,7 @@ Active incoming spam stabilization beta. This build is meant to prove that unrea
 - Cleanup counter with reset action.
 - Minimal options UI with Settings and About tabs.
 - Cleanup diagnostics with manual run support and a capped recent-run history.
-- Packaging setup with `dist/`, `.gitignore`, and `package-xpi.ps1`.
+- Local packaging setup and repository ignore rules for generated XPI files.
 - Project docs set including handoff, roadmap, and privacy policy.
 
 ### Changed
@@ -94,4 +95,4 @@ Active incoming spam stabilization beta. This build is meant to prove that unrea
 
 - Folder-level exclusions.
 - Queue / processing manager.
-- Gmail spam compatibility investigation if Gmail remains inconsistent with other providers.
+- Gmail spam compatibility investigation only if Gmail support is intentionally reopened.
