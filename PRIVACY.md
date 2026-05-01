@@ -56,4 +56,4 @@ If future versions add actions such as deletion, notifications, summaries, rules
 
 ## Project Status
 
-QuietJunk `0.0.5` is a stable beta. Provider-specific spam folders can vary, especially Gmail-style folders, but the supported Thunderbird junk-folder workflow is designed to stay local and privacy-safe.
+QuietJunk `0.0.5` is a stable beta. The supported Thunderbird junk-folder workflow is designed to stay local and privacy-safe. Gmail spam folders are not a supported target right now because Gmail often handles spam unread counts differently.
