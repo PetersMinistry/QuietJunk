@@ -1,10 +1,10 @@
 # Privacy Policy
 
-Last updated: 2026-04-27
+Last updated: 2026-05-01
 
 ## Summary
 
-QuietJunk is designed to run locally inside Mozilla Thunderbird and silently mark junk messages as read. It does not require an external account, remote server, or cloud sync service.
+QuietJunk runs locally inside Mozilla Thunderbird and quietly marks supported junk-folder messages as read. It does not require an external account, remote server, cloud sync service, analytics service, or tracking service.
 
 ## Data QuietJunk Accesses
 
@@ -24,19 +24,22 @@ QuietJunk stores the following settings locally using Thunderbird extension stor
 - whether startup cleanup is enabled
 - startup debounce timing
 - duplicate guard timing
+- active cleanup timing
 - running cleanup counter
+- recent cleanup summary/history shown in the options page
 
 This data is stored locally in the Thunderbird profile through extension storage.
 
 ## What QuietJunk Does Not Do
 
-QuietJunk does not currently:
+QuietJunk does not:
 
 - send message content to external servers
 - upload account data
 - create a remote user account
 - sell or share user data
 - use analytics, ads, or tracking scripts
+- read passwords, payment information, or address book data
 
 ## Message Handling
 
@@ -45,12 +48,12 @@ QuietJunk is intended to:
 - detect junk-folder messages
 - mark unread junk messages as read
 
-It does not currently move, delete, forward, or classify messages on its own beyond the read-state change described above.
+It does not move, delete, forward, reply to, or classify messages on its own beyond the read-state change described above.
 
 ## Future Features
 
-If future versions add actions such as deletion, notifications, summaries, or rules, this privacy policy should be updated before release.
+If future versions add actions such as deletion, notifications, summaries, rules, or any remote service, this privacy policy should be updated before release.
 
-## Contact / Project Notes
+## Project Status
 
-QuietJunk is currently in active local development and not yet described here as a published public service.
+QuietJunk `0.0.5` is a stable beta. Provider-specific spam folders can vary, especially Gmail-style folders, but the supported Thunderbird junk-folder workflow is designed to stay local and privacy-safe.
