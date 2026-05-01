@@ -1,6 +1,6 @@
 # Asset License
 
-The QuietJunk source code is licensed under the MIT License as described in `LICENSE`.
+The QuietJunk source code is licensed under the MIT License as described in `LICENSE.md`.
 
 This asset license applies to the non-code project assets, including:
 
