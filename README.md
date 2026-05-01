@@ -14,7 +14,7 @@ Current build: `0.0.5 Stable Beta`
 
 This build has passed real-world overnight/runtime testing in Thunderbird. Startup cleanup, manual cleanup, and ongoing spam cleanup while Thunderbird stays open have all been working solidly in normal use.
 
-QuietJunk is still labeled beta because provider behavior can vary, especially around Gmail-style spam folders. The core supported Thunderbird junk-folder workflow is stable enough for broader testing.
+QuietJunk is still labeled beta because provider behavior can vary. The core supported Thunderbird junk-folder workflow is stable enough for broader testing.
 
 ## Function
 
@@ -35,7 +35,7 @@ QuietJunk is still labeled beta because provider behavior can vary, especially a
 
 ## Support Baseline
 
-QuietJunk works best with Thunderbird folders that Thunderbird itself exposes as junk folders. Most normal junk folders should behave cleanly. Provider-specific spam folders can be weird and remain best-effort during beta.
+QuietJunk is built for Thunderbird folders that Thunderbird itself exposes as junk folders. Gmail spam is not a supported target right now; Gmail often handles spam unread counts differently, and if it is already quiet in Thunderbird, leave that account excluded.
 
 ## Options
 
