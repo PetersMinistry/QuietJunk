@@ -2,35 +2,36 @@
 
 ## Current Stage
 
-QuietJunk is between the original MVP and early stability/configuration work.
+QuietJunk `0.0.5` is a stable beta. The core mission is working in real use: supported Thunderbird junk folders are being marked read during startup, manual cleanup, and normal all-day runtime use.
 
-Current stable baseline:
+Current baseline:
 
-- packaged local XPI works
-- startup/manual cleanup works for supported Thunderbird junk folders
-- Gmail is intentionally not part of the supported baseline right now
+- packaged XPI works
+- startup cleanup works
+- manual cleanup works
+- runtime cleanup works while Thunderbird stays open or minimized
+- account exclusions and basic options are in place
+- Gmail-style spam folders remain best-effort
 
 ## Near Term
 
-### 1. Live Validation
+### 1. Stable Beta Shakeout
 
-- keep validating new junk delivery behavior in Thunderbird
-- keep validating startup cleanup after restart
-- test multiple accounts
-- test excluded-account behavior
-- leave Gmail alone unless support is intentionally reopened later
+- keep running `0.0.5` in normal use
+- watch for any supported junk folder that still shows unread spam
+- collect provider/account notes before changing behavior again
+- keep Gmail-specific work out of scope unless intentionally reopened
 
 ### 2. Control Improvements
 
 - add folder-level exclusions
-- improve cleanup summary clarity for multi-account runs
+- improve cleanup summary clarity for multi-account profiles
 
 ### 3. Stability Improvements
 
-- add `messages.onMoved` support
-- add `messages.onUpdated` support if needed
 - introduce a queue / processing manager for burst handling
 - tune large-volume behavior
+- improve diagnostics if a supported folder misses cleanup
 
 ## Longer Term
 
