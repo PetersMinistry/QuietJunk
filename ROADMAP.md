@@ -11,7 +11,7 @@ Current baseline:
 - manual cleanup works
 - runtime cleanup works while Thunderbird stays open or minimized
 - account exclusions and basic options are in place
-- Gmail-style spam folders remain best-effort
+- Gmail spam folders are not a supported target right now
 
 ## Near Term
 
@@ -20,7 +20,7 @@ Current baseline:
 - keep running `0.0.5` in normal use
 - watch for any supported junk folder that still shows unread spam
 - collect provider/account notes before changing behavior again
-- keep Gmail-specific work out of scope unless intentionally reopened
+- keep Gmail-specific work out of scope unless intentionally reopened later
 
 ### 2. Control Improvements
 
