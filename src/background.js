@@ -135,7 +135,6 @@ async function scheduleActivePatrolScan(settings, reason) {
   return true;
 }
 
-// John 1:5 - The light shines in the darkness.
 const settings = await ensureSettings();
 
 logInfo("Background script loaded.");
